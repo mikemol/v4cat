@@ -43,8 +43,10 @@ dev = [
 ]
 
 [project.urls]
-Homepage    = "https://github.com/mikemol/sixfiveohtwo"
-Methodology = "https://github.com/mikemol/sixfiveohtwo/blob/main/v4cat/methodology.md"
+Homepage    = "https://github.com/mikemol/v4cat"
+Methodology = "https://github.com/mikemol/v4cat/blob/main/src/v4cat/methodology.md"
+Source      = "https://github.com/mikemol/v4cat"
+Issues      = "https://github.com/mikemol/v4cat/issues"
 
 [project.scripts]
 v4cat-mcp = "v4cat.mcp_server:main"
