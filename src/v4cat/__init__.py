@@ -11,7 +11,7 @@ Public API:
     mixed_breaks                  — breaks committing to multiple axes
     retroactive_attributions      — origin-precedes-first-seen rows
     top_originators               — most prolific originator specs
-    agent_level_witnesses         — agent-scope witnesses (e.g. 8087 Q87)
+    agent_level_witnesses         — witnesses scoped finer than spec
     spec_axis_summary             — per-spec 5-axis declarations
 
 Quick start::
@@ -19,14 +19,20 @@ Quick start::
     from v4cat import SymmetryCatalogue
 
     with SymmetryCatalogue('/tmp/cat.db') as cat:
-        cat.introduce_object('z16', 'IBM z16', year=2022,
-                             vendor='IBM', family='mainframe',
-                             lineage=[('system_370_xa', 'descended-from')])
-        cat.introduce_break('Q94', 'Vector facility', axes=['parallel'])
-        cat.witness('z16', 'Q94', 'origin')
-        cat.witness('z16', 'Q94', 'catalogue-introduces')
-        print(cat.origin('Q94'))
-        print(cat.lineage('z16'))
+        cat.introduce_object('alpha', 'Alpha', year=1980)
+        cat.introduce_object('beta',  'Beta',  year=1985,
+                             lineage=[('alpha', 'descended-from')])
+        cat.introduce_break('F1', 'My first break', axes=['spatial'])
+        cat.witness('alpha', 'F1', 'origin')
+        cat.witness('alpha', 'F1', 'catalogue-introduces')
+        cat.witness('beta',  'F1', 'inherits')
+        print(cat.origin('F1'))
+        print(cat.lineage('beta'))
+
+The framework is domain-agnostic — the witness objects above could
+be processors, programming languages, cryptographic primitives,
+file systems, or any other class of structured artefact. See
+``examples.md`` for domain templates.
 """
 from .catalogue import SymmetryCatalogue
 from .views import (

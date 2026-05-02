@@ -4,13 +4,14 @@ A Python ISA + SQLite schema + MCP server for accumulating named
 structural distinctions ("breaks") about a domain, with witnesses,
 refinements, lineage edges, and the Klein-four read primitive.
 
-This is a self-contained subtree. It can be lifted into its own
-module / repo / pip package without modification.
+The framework is **domain-agnostic**. The ISA's `introduce_object`,
+`introduce_break`, `witness`, `refine` verbs and the analytic views
+work the same whether the witness objects are programming languages,
+processors, cryptographic primitives, file systems, formal systems,
+ML architectures, or anything else with structure worth cataloguing.
+See [examples.md](examples.md) for domain templates.
 
-See [methodology.md](methodology.md) for the design. The processor
-catalogue in the parent repo (`symmetries.md`, `symmetries.sql`) is
-one *application* of this framework; nothing in this directory is
-processor-specific.
+See [methodology.md](methodology.md) for the design.
 
 ## Layout
 
@@ -28,7 +29,7 @@ v4cat/
 ├── methodology.md           operational design — ISA, schema, KQUERY, MCP
 ├── theory.md                foundations — shadow architecture, Klein-four, Yoneda+Derrida, magma+pointfree, Theorem 14.5
 ├── tutorial.md              LLM-friendly walk-through, empty → small worked domain
-├── examples.md              domain templates beyond processors
+├── examples.md              domain templates (languages, processors, crypto, …)
 ├── README.md                this file
 ├── pyproject.toml           pip-installable package metadata
 └── tests/
@@ -134,8 +135,8 @@ The server exposes:
   `catalogue://objects/{id}`, `catalogue://retroactive`,
   `catalogue://axes`, `catalogue://lineages/{id}`,
   `catalogue://self_hosting`, ...)
-- **prompts**: workflow templates (`analyze_new_processor`,
-  `audit_md_vs_sql`, `next_processor`, `snap_to_grid_check`)
+- **prompts**: workflow templates (`analyze_new_object`,
+  `audit_md_vs_sql`, `next_object`, `snap_to_grid_check`)
 
 ## Loading a domain on top
 

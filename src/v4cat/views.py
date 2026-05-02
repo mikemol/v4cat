@@ -19,6 +19,7 @@ core" for the algebraic argument.
 """
 from __future__ import annotations
 
+import re
 from typing import Callable, Hashable, Iterable, Optional, TypeAlias
 
 from .catalogue import SymmetryCatalogue
@@ -169,21 +170,33 @@ def mixed_breaks(cat: SymmetryCatalogue) -> list[dict]:
     return cat.query("SELECT * FROM mixed_breaks")
 
 
+_RULE_NAME_RE = re.compile(r'^[A-Za-z][A-Za-z0-9_]*$')
+
+
 def consistency(cat: SymmetryCatalogue, rule: str) -> list[dict]:
     """Run a named consistency check.
 
-    Currently supports:
-      * ``'q92'``: paged specs (Q89) require restart-suitable frames
-        (Q92). Returns rows representing violations; an empty result
-        means consistent.
+    Domain extensions add their own rules by creating views named
+    ``<rule>_violations``. This function selects from
+    ``<rule>_violations``; an empty result means consistent.
 
-    Internally a kquery: paged-specs (left) compared to
-    specs-with-restart-suitable-frames (right); violations are the
-    ``10`` cell.
+    The rule name must be a valid SQL identifier
+    (``[A-Za-z][A-Za-z0-9_]*``); anything else raises ``ValueError``.
+    The framework ships no built-in rules — they live entirely in
+    domain extension schemas.
+
+    Internally each rule is realised as a kquery: the left set is
+    "specs that should satisfy property X", the right set is "specs
+    that do satisfy X", and violations are the ``10`` cell. The
+    ``<rule>_violations`` view materialises that ``10`` cell for the
+    domain-specific X.
     """
-    if rule == 'q92':
-        return cat.query("SELECT * FROM q92_violations")
-    raise ValueError(f"Unknown consistency rule: {rule!r}")
+    if not _RULE_NAME_RE.match(rule):
+        raise ValueError(
+            f"rule must be a valid identifier "
+            f"([A-Za-z][A-Za-z0-9_]*); got {rule!r}"
+        )
+    return cat.query(f"SELECT * FROM {rule}_violations")
 
 
 def retroactive_attributions(cat: SymmetryCatalogue) -> list[dict]:
@@ -203,7 +216,11 @@ def top_originators(cat: SymmetryCatalogue, *, limit: int = 10) -> list[dict]:
 
 
 def agent_level_witnesses(cat: SymmetryCatalogue) -> list[dict]:
-    """Witnesses scoped at agent level (e.g. 8087 Q87 'precedes')."""
+    """Witnesses whose ``scope`` is finer than the spec
+    (i.e., scoped to a sub-agent of the spec rather than the spec
+    itself). Useful when one named witness object actually contains
+    multiple distinguishable contributors and a break originates
+    at one of them rather than at the whole."""
     return cat.query("SELECT * FROM agent_level_witnesses")
 
 

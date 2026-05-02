@@ -54,6 +54,13 @@ of v4cat to v4cat.
   the 2026-05-02 user request. Snap occurred; deliverable
   readable.
 
+## Audits
+
+- [audit_processor_bias.md](audit_processor_bias.md) — removal
+  of CPU-ISA bias inherited from the parent processor catalogue.
+  Code is fully de-biased; surface docs (README) updated;
+  methodology/theory/tutorial deferred for a follow-up pass.
+
 ## Composition
 
 The shadows compose under **Theorem 14.5's preservation theorem**:

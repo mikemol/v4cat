@@ -162,29 +162,31 @@ def test_cell_eq_with_non_cell_returns_notimplemented():
     assert c.__eq__('string') is NotImplemented
 
 
-def test_consistency_q92_branch_taken():
-    """views.py:184->185 — consistency('q92') reads q92_violations."""
+def test_consistency_with_valid_rule_reads_violations_view():
+    """views.consistency — parametric over rule name; reads the
+    `<rule>_violations` view that a domain extension defines."""
     cat = SymmetryCatalogue(':memory:')
-    # The q92_violations view is domain-specific; load it as an extension
     with tempfile.NamedTemporaryFile('w', suffix='.sql', delete=False) as f:
         f.write(
-            "CREATE VIEW IF NOT EXISTS q92_violations AS "
+            "CREATE VIEW IF NOT EXISTS demo_violations AS "
             "SELECT 'sentinel' AS spec_id WHERE 1 = 0;"
         )
         f.flush()
         cat.load_extension(f.name)
-    rows = consistency(cat, 'q92')
+    rows = consistency(cat, 'demo')
     assert rows == []
 
 
-def test_consistency_unknown_rule_raises():
-    """views.py:184->186 — unknown rule raises ValueError."""
+def test_consistency_rejects_invalid_rule_name():
+    """views.consistency — invalid identifier raises ValueError before
+    any SQL runs (defends against injection at the resource boundary)."""
     cat = SymmetryCatalogue(':memory:')
-    try:
-        consistency(cat, 'nonexistent_rule')
-        assert False, "expected ValueError"
-    except ValueError as e:
-        assert 'nonexistent_rule' in str(e)
+    for bad in ('1bad', 'has-dash', 'has space', "drop'", '', 'with;semi'):
+        try:
+            consistency(cat, bad)
+            assert False, f"expected ValueError for {bad!r}"
+        except ValueError as e:
+            assert 'identifier' in str(e)
 
 
 def test_spec_axis_summary_callable():
@@ -408,19 +410,30 @@ async def test_tensions_resource():
     assert any(t['id'] == 'T1' for t in result)
 
 
-async def test_q92_violations_resource():
-    """mcp_server.py:616 — q92_violations resource body."""
+async def test_violations_resource_with_valid_rule():
+    """mcp_server — catalogue://violations/{rule} parametric
+    consistency-rule resource (success path)."""
     cat = fresh_populated_catalogue()
     with tempfile.NamedTemporaryFile('w', suffix='.sql', delete=False) as f:
         f.write(
-            "CREATE VIEW IF NOT EXISTS q92_violations AS "
+            "CREATE VIEW IF NOT EXISTS demo_violations AS "
             "SELECT 'sentinel' AS spec_id WHERE 1 = 0;"
         )
         f.flush()
         cat.load_extension(f.name)
     cat.commit()
-    result = await read_resource('catalogue://q92_violations')
+    result = await read_resource('catalogue://violations/demo')
     assert result == []
+
+
+async def test_violations_resource_rejects_bad_rule_name():
+    """mcp_server — catalogue://violations/{rule} returns an error
+    object when the rule name is not a valid identifier."""
+    fresh_populated_catalogue()
+    result = await read_resource('catalogue://violations/1bad')
+    assert isinstance(result, dict)
+    assert 'error' in result
+    assert 'identifier' in result['error']
 
 
 async def test_axes_resource():
@@ -587,8 +600,8 @@ SYNC_TESTS = [
     test_tropical_min_rejects_invalid_direction,
     test_tropical_min_rejects_empty_witness_kinds,
     test_cell_eq_with_non_cell_returns_notimplemented,
-    test_consistency_q92_branch_taken,
-    test_consistency_unknown_rule_raises,
+    test_consistency_with_valid_rule_reads_violations_view,
+    test_consistency_rejects_invalid_rule_name,
     test_spec_axis_summary_callable,
     test_theory_by_kind_filters_signature,
     test_supported_kinds_handles_missing_table,
@@ -607,7 +620,8 @@ ASYNC_TESTS = [
     test_list_objects_resource,
     test_get_object_404_for_missing,
     test_tensions_resource,
-    test_q92_violations_resource,
+    test_violations_resource_with_valid_rule,
+    test_violations_resource_rejects_bad_rule_name,
     test_axes_resource,
     test_mixed_breaks_resource,
     test_agent_witnesses_resource,

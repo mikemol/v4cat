@@ -37,15 +37,15 @@ CREATE TABLE IF NOT EXISTS breaks (
 --   name:            human-readable label; needed by reports, prompts
 --   year:            tropical-MIN axis for the break_origin view;
 --                    structurally privileged by the temporal-axis
---                    commitment (Q72 in the processor catalogue, the
---                    universal-temporal-axis claim in theory.md § 3)
+--                    commitment (the universal-temporal-axis claim
+--                    in theory.md § 3)
 --   catalogue_order: tropical-MIN axis for the break_first_seen view;
 --                    distinct from year because catalogue exposition
 --                    order isn't always chronological
 --   notes:           free-form annotation; any catalogue benefits
 --
--- Domain-specific attributes (vendor, family, register widths, ...)
--- are *not* baked in. They belong in `spec_attributes` (S2b below)
+-- Domain-specific attributes are *not* baked in. They belong in
+-- `spec_attributes` (S2b below)
 -- as (name, value) pairs, OR in a domain-extension's own ALTER
 -- TABLE if the attribute is queried frequently enough to justify a
 -- typed column.
@@ -160,8 +160,9 @@ CREATE TABLE IF NOT EXISTS tension_breaks (
 
 -- -----------------------------------------------------------------------------
 -- S8: scope on witnesses — already inlined above (agent vs spec).
--- This break corresponds to adding the `scope` column when 8087
--- forced agent-level Q87 to be distinguished from spec-level.
+-- This break introduced the `scope` column when a witness object
+-- containing multiple distinguishable contributors forced
+-- agent-level attribution to be distinguished from spec-level.
 -- -----------------------------------------------------------------------------
 
 -- -----------------------------------------------------------------------------
