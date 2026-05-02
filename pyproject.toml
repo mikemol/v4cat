@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "v4cat"
-version = "0.3.0"
+version = "0.4.0"
 description = "Symmetry-break cataloguing — ISA + SQLite schema + MCP server for accumulating named structural distinctions about a domain (Klein-four-equipped, self-hosting)"
 readme = "README.md"
 requires-python = ">=3.10"

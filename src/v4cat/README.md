@@ -30,6 +30,7 @@ v4cat/
 ├── theory.md                foundations — shadow architecture, Klein-four, Yoneda+Derrida, magma+pointfree, Theorem 14.5
 ├── tutorial.md              LLM-friendly walk-through, empty → small worked domain
 ├── examples.md              domain templates (languages, processors, crypto, …)
+├── mcp_setup.md             wire the MCP server into VS Code, Claude Desktop, Claude Code, Codex
 ├── README.md                this file
 ├── pyproject.toml           pip-installable package metadata
 └── tests/
@@ -40,10 +41,14 @@ v4cat/
 
 ## Documentation
 
-The framework is documented at four levels of depth:
+The framework is documented at five levels of depth, plus a
+setup guide:
 
 - **`README.md`** (this file): quick start. Installation, layout,
   first commands.
+- **`mcp_setup.md`**: wire the MCP server into VS Code,
+  Claude Desktop, Claude Code, Codex CLI, or any generic stdio
+  MCP client.
 - **`tutorial.md`**: walk-through from empty catalogue to a small
   worked domain. Best first read for an LLM operating the
   catalogue.
@@ -58,12 +63,12 @@ The framework is documented at four levels of depth:
   cryptographic primitives, databases, file systems, network
   protocols, mathematical structures, OS designs, ML architectures.
 
-All five files are exposed as MCP resources at `catalogue://readme`,
-`catalogue://tutorial`, `catalogue://methodology`,
-`catalogue://theory`, and `catalogue://examples`. There's also
-`catalogue://docs` — an index resource that lists everything
-available, suitable as the entry point for an LLM encountering
-the framework.
+All six files are exposed as MCP resources at `catalogue://readme`,
+`catalogue://mcp_setup`, `catalogue://tutorial`,
+`catalogue://methodology`, `catalogue://theory`, and
+`catalogue://examples`. There's also `catalogue://docs` — an
+index resource that lists everything available, suitable as the
+entry point for an LLM encountering the framework.
 
 ## Quick start
 
@@ -122,8 +127,9 @@ symlink-escape attempts. See [v4cat/sandbox.py](sandbox.py) for the
 validation.
 
 Connects via stdio (the standard MCP transport). Configure your
-MCP-aware client (Claude Desktop, Claude Code, custom agents) to
-talk to it.
+MCP-aware client (VS Code, Claude Desktop, Claude Code, Codex CLI,
+custom agents) to talk to it — see [mcp_setup.md](mcp_setup.md)
+for the per-client config snippets.
 
 The server exposes:
 
