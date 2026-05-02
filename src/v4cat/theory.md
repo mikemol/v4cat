@@ -286,12 +286,14 @@ read primitive, several things follow:
 
 "Who originated this break?" is asking, *along an ordered axis*,
 for the extremum witness with an origin-class kind. Concretely:
-`MIN(year)` over a filtered edge set — a tropical-algebra (min-plus)
-aggregate. No need for a `RETRO` verb; attribution is always
-derived this way. The same machinery handles "first to confirm
-cross-vendor," "earliest to refine," "most-recent to deprecate" —
-each is a tropical query over a different ordered axis with a
-different witness-kind filter.
+`MIN(<axis>)` over a filtered edge set — a tropical-algebra (min-plus)
+aggregate. The framework provides `year` as the canonical default
+axis, but any ordered column on `specs` works (`version`,
+`paper_year`, `proof_depth`, …). No need for a `RETRO` verb;
+attribution is always derived this way. The same machinery handles
+"first to confirm cross-vendor," "earliest to refine," "most-recent
+to deprecate" — each is a tropical query over a different ordered
+axis with a different witness-kind filter.
 
 #### (b) Time and lineage are breaks-themselves
 
@@ -740,8 +742,9 @@ The catalogue refuses presence at every level:
   contribute traces.
 - **No foundational origin.** The originator of any break isn't
   a fact stamped into the schema. It's *derivation* — tropical
-  MIN-year over origin-class witness edges. An earlier reading
-  isn't wrong; it's what the trace-set then licensed.
+  MIN over the catalogue's chosen metric axis, restricted to
+  origin-class witness edges. An earlier reading isn't wrong;
+  it's what the trace-set then licensed.
 - **No foundational schema.** Schema breaks emerged additively;
   none was specified in advance. The schema is itself a sediment
   of traces.
@@ -762,8 +765,8 @@ example to make it concrete):
 - Later catalogue session: an earlier object α (System/360/67,
   1965) is examined, found to have already exhibited the break
   twenty years earlier. An `origin` witness from α is added.
-- *The originator of F1 is now α* — automatically, via the view's
-  MIN-year query.
+- *The originator of F1 is now α* — automatically, via the
+  tropical-MIN-over-the-axis query.
 
 Crucially: **the prior reading wasn't false.** It was the originator
 *as the trace-set then licensed*. The new originator is the
@@ -1163,13 +1166,14 @@ illustration to make it concrete):
   1985) as the originator of break F1 (paging).
 - Later session: catalogue examines an earlier object α (the
   System/360/67, year 1965) and adds an `origin` witness from it.
-- Now: the originator query (`MIN(year)` over origin-class) returns
-  α — the earlier originator.
+- Now: the originator query (`MIN(year)` over origin-class — or
+  `MIN(<other-axis>)` for catalogues that have chosen a different
+  metric field) returns α — the earlier originator.
 
 The first reading isn't corrected. β still holds its
 `catalogue-introduces` witness. The `first_seen` view still returns
-β. What changed: α now has an `origin` witness that the MIN-year
-query picks up.
+β. What changed: α now has an `origin` witness that the
+tropical-MIN-over-the-axis query picks up.
 
 There's no `RETRO` verb because there's no correction. There's
 just additional trace material and re-derivation.

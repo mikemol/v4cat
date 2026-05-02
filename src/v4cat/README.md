@@ -168,10 +168,10 @@ The brief version:
 
 1. **Identity is relational** (Yoneda). An object is its
    participation in the witness graph; nothing more.
-2. **Time and lineage are breaks-themselves.** Year and lineage
-   are recorded once per object as primary data; *attribution
-   emerges* via tropical MIN-year over origin-class edges.
-   There's no `RETRO` verb.
+2. **Time and lineage are breaks-themselves.** A metric field
+   (e.g. year) and lineage are recorded once per object as primary
+   data; *attribution emerges* via tropical MIN over the chosen
+   axis, restricted to origin-class edges. There's no `RETRO` verb.
 3. **Every read is a comparison** (Klein-four). `kquery(A, B; U)`
    classifies the universe into four cells (`11`, `10`, `01`, `00`).
    `query`, `wedge`, `coverage`, `blind` are named selections.

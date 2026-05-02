@@ -697,7 +697,9 @@ cat.commit()
 ### Read the derived structure
 
 ```python
-# Originator queries (tropical MIN-year over origin-class)
+# Originator queries (tropical MIN over the year axis,
+# restricted to origin-class witness edges; cat.origin() also
+# accepts axis_column= for any other ordered metric field)
 print(cat.origin('LANG-A'))
 # → originator: alpha-lang, year: 1980
 

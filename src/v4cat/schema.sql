@@ -35,20 +35,29 @@ CREATE TABLE IF NOT EXISTS breaks (
 --
 --   id:              identity (primary key); needed by every relation
 --   name:            human-readable label; needed by reports, prompts
---   year:            tropical-MIN axis for the break_origin view;
---                    structurally privileged by the temporal-axis
---                    commitment (the universal-temporal-axis claim
---                    in theory.md § 3)
---   catalogue_order: tropical-MIN axis for the break_first_seen view;
---                    distinct from year because catalogue exposition
---                    order isn't always chronological
+--   year:            *one default* metric field — tropical-MIN axis
+--                    for the break_origin view. Year is the most
+--                    common temporal axis (calendar years), but the
+--                    framework's structural commitment is to tropical
+--                    aggregates over *any* comparable metric field.
+--                    Domain extensions can ALTER TABLE specs ADD
+--                    COLUMN to add their own metric columns; every
+--                    sugar function (origin, retroactive_gap, ...)
+--                    accepts an axis_column parameter that defaults
+--                    to 'year' but works over any ordered column.
+--                    See theory.md § 3 (universal-temporal-axis) and
+--                    catalogue.tropical_min for the generic primitive.
+--   catalogue_order: tropical-MIN axis for the break_first_seen view.
+--                    Distinct from year because exposition order
+--                    isn't always chronological. Unlike year, this
+--                    one is structurally non-domain-specific — it's
+--                    the catalogue's own exposition axis.
 --   notes:           free-form annotation; any catalogue benefits
 --
 -- Domain-specific attributes are *not* baked in. They belong in
--- `spec_attributes` (S2b below)
--- as (name, value) pairs, OR in a domain-extension's own ALTER
--- TABLE if the attribute is queried frequently enough to justify a
--- typed column.
+-- `spec_attributes` (S2b below) as (name, value) pairs, OR in a
+-- domain-extension's own ALTER TABLE if the attribute is queried
+-- frequently enough to justify a typed column.
 -- -----------------------------------------------------------------------------
 
 CREATE TABLE IF NOT EXISTS specs (

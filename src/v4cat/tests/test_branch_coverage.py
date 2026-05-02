@@ -162,6 +162,67 @@ def test_cell_eq_with_non_cell_returns_notimplemented():
     assert c.__eq__('string') is NotImplemented
 
 
+def test_origin_returns_none_for_unknown_break():
+    """catalogue.py origin() — no rows -> return None."""
+    cat = SymmetryCatalogue(':memory:')
+    assert cat.origin('F-nonexistent') is None
+
+
+def test_retroactive_gap_none_when_origin_missing():
+    """catalogue.py retroactive_gap() — origin returns None
+    (no origin/catalogue-introduces witness)."""
+    cat = SymmetryCatalogue(':memory:')
+    assert cat.retroactive_gap('F-nonexistent') is None
+
+
+def test_retroactive_gap_none_when_origin_filters_to_nothing():
+    """catalogue.py retroactive_gap() — every candidate spec has a
+    null axis value (tropical_min's NULL filter excludes all)."""
+    cat = SymmetryCatalogue(':memory:')
+    cat.introduce_object('only', 'Only', year=None, catalogue_order=1)
+    cat.introduce_break('F', 'F', axes=['spatial'])
+    cat.witness('only', 'F', 'origin')
+    cat.witness('only', 'F', 'catalogue-introduces')
+    # No spec has a non-null year for this break — origin returns None
+    assert cat.origin('F') is None
+    # retroactive_gap therefore returns None
+    assert cat.retroactive_gap('F') is None
+
+
+def test_retroactive_gap_none_when_first_seen_missing():
+    """catalogue.py retroactive_gap() — origin OK, but no
+    catalogue-introduces witness so first_seen is None."""
+    cat = SymmetryCatalogue(':memory:')
+    cat.introduce_object('a', 'A', year=1990, catalogue_order=1)
+    cat.introduce_break('F', 'F', axes=['spatial'])
+    cat.witness('a', 'F', 'origin')
+    # No catalogue-introduces witness — first_seen() returns None
+    # But origin() will still pick a (origin witness, year=1990)
+    assert cat.origin('F') is not None
+    assert cat.first_seen('F') is None
+    assert cat.retroactive_gap('F') is None
+
+
+def test_retroactive_gap_none_when_first_seen_axis_value_is_null():
+    """catalogue.py retroactive_gap() — first_seen's spec has a null
+    value on the chosen axis_column."""
+    cat = SymmetryCatalogue(':memory:')
+    cat.conn.execute("ALTER TABLE specs ADD COLUMN version INTEGER")
+    cat.introduce_object('older', 'Older', year=1990, catalogue_order=2)
+    cat.introduce_object('newer', 'Newer', year=2000, catalogue_order=1)
+    cat.conn.execute(
+        "UPDATE specs SET version = ? WHERE id = ?", (5, 'older'))
+    # newer.version intentionally null
+    cat.introduce_break('F', 'F', axes=['spatial'])
+    cat.witness('older', 'F', 'origin')
+    cat.witness('newer', 'F', 'catalogue-introduces')
+    # On 'version' axis: origin uses MIN(version) over origin/CI edges
+    # → only older has non-null version, so origin = older, value = 5.
+    # first_seen uses MIN(catalogue_order) → newer (CO=1).
+    # newer.version is null → retroactive_gap returns None.
+    assert cat.retroactive_gap('F', axis_column='version') is None
+
+
 def test_consistency_with_valid_rule_reads_violations_view():
     """views.consistency — parametric over rule name; reads the
     `<rule>_violations` view that a domain extension defines."""
@@ -600,6 +661,11 @@ SYNC_TESTS = [
     test_tropical_min_rejects_invalid_direction,
     test_tropical_min_rejects_empty_witness_kinds,
     test_cell_eq_with_non_cell_returns_notimplemented,
+    test_origin_returns_none_for_unknown_break,
+    test_retroactive_gap_none_when_origin_missing,
+    test_retroactive_gap_none_when_origin_filters_to_nothing,
+    test_retroactive_gap_none_when_first_seen_missing,
+    test_retroactive_gap_none_when_first_seen_axis_value_is_null,
     test_consistency_with_valid_rule_reads_violations_view,
     test_consistency_rejects_invalid_rule_name,
     test_spec_axis_summary_callable,

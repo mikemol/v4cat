@@ -25,15 +25,19 @@ is domain-agnostic; this document spells out the design.
    tags on breaks.
 6. **Tensions**: structural concerns about implementation alignment.
    Generic: triples (concern, breaks-involved, status).
-7. **Time and lineage as breaks-themselves**: the catalogue's
-   chronological-origin and inheritance-relation aren't special verbs
-   *applied to* the graph; they're symmetry breaks *over* objects.
-   Once the methodology admits time as a break (year-of-articulation
-   partitions objects) and lineage as a break (descent partitions
-   objects), attribution emerges as a *derivation* via tropical query
-   (MIN over the time-break, restricted to origin-class witnesses).
-   "Retroactive" is just a label for the case where origin's year
-   precedes catalogue-introduction's year — not a special primitive.
+7. **Metric fields and lineage as breaks-themselves**: the
+   catalogue's "originator" attribution and inheritance relation
+   aren't special verbs *applied to* the graph; they're symmetry
+   breaks *over* objects. Once the methodology admits a comparable
+   metric field as a break (any ordered column on `specs`
+   partitions objects by that order — `year` is one canonical
+   default, but `version`, `paper_year`, `proof_depth`, etc. all
+   work the same way) and lineage as a break (descent partitions
+   objects), attribution emerges as a *derivation* via tropical
+   query (MIN over the chosen axis, restricted to origin-class
+   witnesses). "Retroactive" is just a label for the case where
+   origin's metric value precedes catalogue-introduction's metric
+   value — not a special primitive.
 8. **Schema-itself-evolves-via-breaks**: the data shape grows as new
    structural primitives surface. Generic: schema breaks are additive
    rules over the meta-schema.
@@ -165,42 +169,51 @@ equivalent shape — relational normal form of the same graph.
 
 The ISA below abstracts over which shape the runtime chooses.
 
-## Time and lineage are breaks themselves
+## Metric fields and lineage are breaks themselves
 
-A foundational observation that simplifies the ISA: *time and lineage
-are not special verbs applied to the graph; they're symmetry breaks
-over objects, recorded with the same machinery as every other break.*
+A foundational observation that simplifies the ISA: *a metric field
+(any comparable ordered column) and lineage are not special verbs
+applied to the graph; they're symmetry breaks over objects,
+recorded with the same machinery as every other break.*
 
 This means:
 
-- **Year-of-articulation** is a structural attribute on objects —
-  partitioning the object space by chronological order. The catalogue
-  records it once per object; every "originator" question becomes a
-  tropical query (MIN-year over origin-class witness edges).
+- **A metric field** (e.g. year of articulation, version number,
+  paper-publication date, proof-tree depth, NIST round) is a
+  structural attribute on objects — partitioning the object space
+  by that ordered field. The catalogue records it once per object;
+  every "originator" question becomes a tropical query (MIN over
+  the chosen axis, restricted to origin-class witness edges). The
+  framework provides `year` as one canonical default but the
+  generic `tropical_min(axis_column, witness_kinds)` operator and
+  the parametric `origin(break, axis_column=...)` sugar work over
+  any ordered column.
 - **Lineage / descent** is a structural relation between objects —
-  partitioning the object space by family / vendor / inheritance path.
-  Recorded as edges of kind `inherits` or `descended-from`; "what does
-  X inherit from Y?" becomes a transitive-closure query.
-- **Catalogue-exposition order** is a third such structural attribute —
-  separate from year because exposition follows the analyst's design
-  lineage rather than chronology. (A catalogue may add objects in an
-  order that doesn't track their year of introduction; that's
-  expected.) "First-seen-in-catalogue" is MIN(exposition_order) over
-  `catalogue-introduces` edges.
+  partitioning the object space by family / vendor / inheritance
+  path. Recorded as edges of kind `inherits` or `descended-from`;
+  "what does X inherit from Y?" becomes a transitive-closure
+  query.
+- **Catalogue-exposition order** is a third structural attribute —
+  separate from any domain metric field because exposition follows
+  the analyst's design lineage rather than the metric field's
+  ordering. (A catalogue may add objects in an order that doesn't
+  track their position on the chosen metric.) "First-seen-in-
+  catalogue" is `MIN(catalogue_order)` over `catalogue-introduces`
+  edges.
 
 Once these three are recorded as primary data, **attribution is always
 derived**. There's no special "retroactive attribution" verb because
-there's no special case: every origin query is the same MIN-year over
-the same edges; the *gap* between origin's year and first-seen's year
-is just an arithmetic difference, named "retroactive" only when
-positive.
+there's no special case: every origin query is the same tropical-MIN
+over the same edges; the *gap* between origin's metric value and
+first-seen's metric value is just an arithmetic difference, named
+"retroactive" only when positive.
 
 The implication: the ISA below has *no* `RETRO` verb. The first time
 the catalogue analyses break F1 at object β (year 1985), an `origin`
 witness from β is added. Later, when an earlier-but-not-yet-
 catalogued object α (year 1965) is examined, an `origin` witness
-from α is added. The view's MIN-year query naturally picks α
-(1965) over β (1985); no correction step is needed. The catalogue
+from α is added. The tropical-MIN-over-the-axis query naturally
+picks α (1965) over β (1985); no correction step is needed. The catalogue
 *re-derives* the originator on every read, so the answer always
 reflects the current state of the witness graph.
 
@@ -547,12 +560,13 @@ using it:
   break crystallises around a structural distinction that some object
   forces into view. Speculative breaks (added before any witness) tend
   to drift.
-- **Time and lineage are breaks-themselves; attribution is derived.**
-  Year and lineage are recorded once per object as primary data. Every
-  "who originated this?" question is then a tropical MIN-year query
-  over origin-class edges; "what does X inherit?" is a transitive
-  closure over lineage edges. There's no special-casing for catalogue
-  exposition order versus chronology.
+- **Metric fields and lineage are breaks-themselves; attribution is
+  derived.** A metric field (year by default; any ordered column) and
+  lineage are recorded once per object as primary data. Every "who
+  originated this?" question is then a tropical-MIN-over-the-axis
+  query over origin-class edges; "what does X inherit?" is a
+  transitive closure over lineage edges. There's no special-casing
+  for catalogue exposition order versus the metric field's order.
 - **Schema breaks are additive.** Don't drop columns; add new ones.
   `ALTER TABLE ADD COLUMN` is the typical move; `CREATE TABLE` for
   genuinely new raw structure that domain extensions force.
@@ -598,8 +612,10 @@ WITNESS   delta F-temporal catalogue-introduces
 
 -- Earlier addition: F-old was introduced at gamma's commit
 -- (catalogue-introduces). Now we add an origin edge from alpha. The
--- view's MIN-year naturally picks 1965 over gamma's year;
--- "retroactive" is a derived label.
+-- tropical-MIN-over-axis query naturally picks 1965 over gamma's
+-- year; "retroactive" is a derived label. (The default axis is
+-- `year`; the same shape applies if the catalogue uses a
+-- different metric field — version, paper-publication-date, etc.)
 WITNESS alpha F-old origin
 ```
 
@@ -875,8 +891,9 @@ The methodology refuses presence at every level:
   object's analysis surfaced it; each remains revisable as future
   objects contribute traces that re-position it.
 - **No foundational origin.** The originator of a break isn't a fact
-  stamped into the schema; it's a *derivation* (tropical MIN-year
-  over origin-class witness edges). Adding an earlier object's
+  stamped into the schema; it's a *derivation* (tropical MIN over
+  the chosen metric axis, restricted to origin-class witness
+  edges). Adding an earlier object's
   origin trace to a previously-attributed break doesn't *correct*
   the catalogue — it *re-derives* the originator. The earlier
   reading wasn't wrong; it was what the trace-set licensed at the

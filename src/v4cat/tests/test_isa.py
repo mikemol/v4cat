@@ -548,6 +548,66 @@ def test_tropical_min_works_over_custom_axis_column():
     assert by_break['F1']['axis_value'] == 1
 
 
+def test_origin_parametric_over_axis_column():
+    """origin() routes through tropical_min and accepts any ordered
+    column on specs. Demonstrates that 'year' is a default, not a
+    structural commitment."""
+    cat = SymmetryCatalogue(':memory:')
+    cat.conn.execute("ALTER TABLE specs ADD COLUMN paper_year INTEGER")
+    cat.introduce_object('a', 'A', year=2010)
+    cat.introduce_object('b', 'B', year=2005)
+    cat.conn.execute(
+        "UPDATE specs SET paper_year = ? WHERE id = ?", (1990, 'a'))
+    cat.conn.execute(
+        "UPDATE specs SET paper_year = ? WHERE id = ?", (2000, 'b'))
+    cat.introduce_break('F', 'F', axes=['spatial'])
+    cat.witness('a', 'F', 'origin')
+    cat.witness('b', 'F', 'origin')
+    cat.witness('a', 'F', 'catalogue-introduces')
+
+    # Default axis is year: b has earlier year (2005), so b is the originator
+    by_year = cat.origin('F')
+    assert by_year['originator_id']     == 'b'
+    assert by_year['originated_year']   == 2005
+
+    # On paper_year axis: a has earlier paper_year (1990), so a is the originator
+    by_paper = cat.origin('F', axis_column='paper_year')
+    assert by_paper['originator_id']         == 'a'
+    assert by_paper['originated_paper_year'] == 1990
+
+
+def test_retroactive_gap_parametric_over_axis_column():
+    """retroactive_gap() takes any ordered column. Default 'year'
+    preserves legacy behaviour; other columns give domain-specific
+    gaps."""
+    cat = SymmetryCatalogue(':memory:')
+    cat.conn.execute("ALTER TABLE specs ADD COLUMN version INTEGER")
+    cat.introduce_object('newer', 'Newer', year=2010, catalogue_order=1)
+    cat.introduce_object('older', 'Older', year=1980, catalogue_order=2)
+    cat.conn.execute(
+        "UPDATE specs SET version = ? WHERE id = ?", (10, 'newer'))
+    cat.conn.execute(
+        "UPDATE specs SET version = ? WHERE id = ?", (3,  'older'))
+    cat.introduce_break('F', 'F', axes=['spatial'])
+    cat.witness('newer', 'F', 'catalogue-introduces')
+    cat.witness('older', 'F', 'origin')
+
+    # Default 'year' axis: gap = newer.year - older.year = 30
+    assert cat.retroactive_gap('F') == 30
+    # 'version' axis: gap = newer.version - older.version = 7
+    assert cat.retroactive_gap('F', axis_column='version') == 7
+
+
+def test_retroactive_gap_rejects_invalid_axis():
+    """retroactive_gap raises on a non-existent axis column."""
+    cat = SymmetryCatalogue(':memory:')
+    try:
+        cat.retroactive_gap('F', axis_column='nope')
+        assert False, "expected ValueError"
+    except ValueError as e:
+        assert 'nope' in str(e)
+
+
 def test_kquery_against_synthetic_catalogue():
     """A useful application: which breaks have origin and which are
     deferred? KQUERY over (active-breaks, deferred-breaks) over the
@@ -611,6 +671,9 @@ ALL_TESTS = [
     test_tropical_max_picks_extremum,
     test_tropical_min_rejects_nonexistent_column,
     test_tropical_min_works_over_custom_axis_column,
+    test_origin_parametric_over_axis_column,
+    test_retroactive_gap_parametric_over_axis_column,
+    test_retroactive_gap_rejects_invalid_axis,
     test_kquery_against_synthetic_catalogue,
 ]
 

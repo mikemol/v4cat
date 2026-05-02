@@ -486,17 +486,45 @@ class SymmetryCatalogue:
     # Analytic queries — never mutate, always derived
     # =================================================================
 
-    def origin(self, break_: str) -> dict | None:
-        """ORIGIN(break) — tropical MIN(year) over origin-class edges."""
-        cur = self.conn.execute(
-            "SELECT * FROM break_origin WHERE break_number = ?",
-            (break_,),
+    def origin(
+        self, break_: str, *, axis_column: str = 'year',
+    ) -> dict | None:
+        """ORIGIN(break, axis_column='year') — earliest contributor on
+        the chosen metric field.
+
+        Sugar over ``tropical_min(axis_column, witness_kinds=('origin',
+        'catalogue-introduces'))``. The framework's structural
+        commitment is to tropical aggregates over *any* comparable
+        metric field; ``year`` is one canonical default but any
+        ordered column on ``specs`` works. Returns the legacy
+        ``originated_year`` key when ``axis_column='year'`` and a
+        parallel ``originated_<axis_column>`` key otherwise.
+        """
+        rows = self.tropical_min(
+            axis_column=axis_column,
+            witness_kinds=('origin', 'catalogue-introduces'),
+            break_=break_,
         )
-        row = cur.fetchone()
-        return dict(row) if row else None
+        if not rows:
+            return None
+        r = rows[0]
+        return {
+            'break_number':    r['break_number'],
+            'break_name':      r['break_name'],
+            'originator_id':   r['spec_id'],
+            'originator_name': r['spec_name'],
+            f'originated_{axis_column}': r['axis_value'],
+        }
 
     def first_seen(self, break_: str) -> dict | None:
-        """FIRST_SEEN(break) — tropical MIN(catalogue_order)."""
+        """FIRST_SEEN(break) — earliest catalogue-introduces edge by
+        ``catalogue_order``.
+
+        ``catalogue_order`` is the catalogue's own exposition axis —
+        structurally non-domain-specific — so this query is not
+        parametric over a metric field. (Domain metric fields like
+        ``year`` or any other ordered column belong on ``origin()``.)
+        """
         cur = self.conn.execute(
             "SELECT * FROM break_first_seen WHERE break_number = ?",
             (break_,),
@@ -513,15 +541,41 @@ class SymmetryCatalogue:
         row = cur.fetchone()
         return row['status'] if row else None
 
-    def retroactive_gap(self, break_: str) -> int | None:
-        """RETROACTIVE_GAP(break) — first_seen.year - origin.year."""
+    def retroactive_gap(
+        self, break_: str, *, axis_column: str = 'year',
+    ) -> int | None:
+        """RETROACTIVE_GAP(break, axis_column='year') — gap on the
+        chosen metric field between ``first_seen``'s spec and
+        ``origin``'s spec.
+
+        Concretely: ``first_seen.<axis_column> - origin.<axis_column>``,
+        positive when origin is earlier on the metric field than
+        first_seen (i.e., catalogue exposition order didn't match
+        the metric field's order). Returns None when either spec is
+        missing or has a null value on the axis.
+        """
+        if axis_column not in self._spec_columns():
+            raise ValueError(
+                f"axis_column {axis_column!r} not found on specs; "
+                f"available: {sorted(self._spec_columns())}"
+            )
+        o = self.origin(break_, axis_column=axis_column)
+        if o is None:
+            return None
+        # tropical_min filters NULLs in its inner subquery, so origin's
+        # axis_value is non-null whenever origin returns a row.
+        origin_value = o[f'originated_{axis_column}']
+        fs = self.first_seen(break_)
+        if fs is None:
+            return None
         cur = self.conn.execute(
-            "SELECT retroactive_gap_years FROM breaks_with_origin "
-            "WHERE number = ?",
-            (break_,),
+            f"SELECT {axis_column} AS v FROM specs WHERE id = ?",
+            (fs['first_seen_at_id'],),
         )
-        row = cur.fetchone()
-        return row['retroactive_gap_years'] if row else None
+        fs_row = cur.fetchone()
+        if fs_row is None or fs_row['v'] is None:
+            return None
+        return fs_row['v'] - origin_value
 
     def lineage(self, object_: str) -> list[dict]:
         """LINEAGE(object) — ancestors via the lineages table.
