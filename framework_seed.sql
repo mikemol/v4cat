@@ -105,7 +105,18 @@ INSERT OR IGNORE INTO refinements (break_number, spec_id, name, description) VAL
     ('Q-supported-claims', 'framework', 'supported_kinds',
      'O,B,W,R,E,K,X'),
     ('Q-bootstrap-closure', 'framework', 'preservation_theorem',
-     'Additive schema moves on K preserve ClosureKQ(K, scope).gap = empty.');
+     'Additive schema moves on K preserve ClosureKQ(K, scope).gap = empty.'),
+
+    -- Q-kquery's orbit: the named selections in views.py are
+    -- orbit-positions of kquery under fixed emit-mask + projection.
+    -- All six remain Kind.K (kquery instances), not their own kind —
+    -- per orbit-saturation discipline (shadow-architecture rule 6),
+    -- they are NOT separate universal records. See
+    -- cotype/shadow_kquery_orbit.md.
+    ('Q-kquery', 'framework', 'named_selections',
+     'agree:{11}; left_residue:{10}; right_residue:{01}; blind:{00}; coverage:{10,01,11}/flat; wedge:{10,01,11}/legacy'),
+    ('Q-kquery', 'framework', 'orbit_saturation',
+     '7 of 16 emit-subsets named (kquery itself + 6 named selections); saturated for current named-read use cases.');
 
 -- Axes and (partition, preservation-theorem) on the bootstrap break.
 INSERT OR IGNORE INTO break_axes (break_number, axis) VALUES

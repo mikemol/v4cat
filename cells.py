@@ -30,7 +30,12 @@ class Kind(str, Enum):
     W = 'W'    # witnesses
     R = 'R'    # refinements
     E = 'E'    # schema-extensions
-    A = 'A'    # wedge audits
+    A = 'A'    # wedge audits — reserved for the bicategorical 2-cell lift
+               # (theory.md § 14.6.5) and as the under-promising example
+               # (theory.md § 14.6.1); empty in the strict 1-categorical
+               # implementation. Named selections of kquery (wedge, agree,
+               # blind, coverage, left/right_residue) are orbit-elements
+               # of Kind.K, NOT Kind.A — see cotype/shadow_kquery_orbit.md.
     K = 'K'    # kquery instances / read operators
     X = 'X'    # closure-check instances
 
