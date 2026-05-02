@@ -255,9 +255,11 @@ structure is always derived, never imposed.**
 
 ## 6. Lineage and inheritance
 
-Many domains have descendant relations between objects. Programming
-languages descend from each other; processors do too. The catalogue
-records descent as edges in the `lineages` table.
+Many domains have descendant relations between objects — programming
+languages, processors, file system formats, ML model architectures,
+cryptographic primitives, schema versions of an evolving database all
+have descent structure. The catalogue records descent as edges in the
+`lineages` table.
 
 ### Add a descendant
 
@@ -393,9 +395,10 @@ cat.boundary('L3',
 print(cat.status('L3'))   # → 'sibling-boundary'
 ```
 
-This is rare. The processor catalogue uses it once (Q81 — multi-CPU
-shared-memory architectures live in a sibling framework rather
-than extending the per-spec metamodel).
+This is rare. Use it when a candidate distinction is *real* and
+*adjacent* to your metamodel, but you've decided the metamodel
+shouldn't try to absorb it — it lives in a sibling framework
+instead.
 
 ## 9. The Klein-four read primitive
 
@@ -476,12 +479,12 @@ coverage(['a', 'b'], ['b', 'c'])
 universe element:
 
 ```python
-kquery(['Q89', 'Q90'], ['q89', 'Q91'], normalize=str.upper)
-# → {'00': [], '01': ['Q91'], '10': ['Q90'], '11': ['Q89']}
+kquery(['F1', 'F2'], ['f1', 'F3'], normalize=str.upper)
+# → {'00': [], '01': ['F3'], '10': ['F2'], '11': ['F1']}
 ```
 
-`'Q89'` and `'q89'` agree under case-folding. Useful for
-identifier canonicalisation, lineage projection, etc.
+`'F1'` and `'f1'` agree under case-folding. Useful for identifier
+canonicalisation, lineage projection, etc.
 
 ### Why the four-cell view matters
 
@@ -491,15 +494,16 @@ cells. The methodology's commitment is that you should always have
 all four available — not just the two that conventional diff tools
 expose.
 
-This is most useful for *structural-consistency checks*. Example:
-"Of all specs that have frame_format declared (universe), which are
-paged (A), and which have restart-suitable frames (B)?" The cell
-breakdown tells you:
+This is most useful for *structural-consistency checks*. Example
+(generic): "Of all objects in the universe, which exhibit property
+A, and which exhibit property B?" The cell breakdown tells you:
 
-- `11` — paged AND restart-suitable: virtual memory works.
-- `10` — paged but not restart-suitable: Q92 violation.
-- `01` — restart-suitable but not paged: pre-VM specs (fine).
-- `00` — neither: structurally interesting (e.g., 80286).
+- `11` — both A and B: the property pair holds.
+- `10` — A but not B: candidate violation if your metamodel says
+  A *requires* B (this is the cell `<rule>_violations` views
+  typically materialise).
+- `01` — B but not A: structurally fine — B without A is allowed.
+- `00` — neither: structurally interesting; flagged for review.
 
 ## 10. The retroactive-attribution case
 
@@ -571,21 +575,22 @@ version), they can drift apart. Wedge audits surface drift.
 Suppose you have two source-of-truth claims:
 
 ```python
-prose_breaks = ['Q74', 'Q75', 'Q76', 'Q89', 'Q-x']      # from prose doc
-sql_breaks   = ['Q74', 'Q75', 'Q76', 'Q89', 'Q-y']      # from SQL
+prose_breaks = ['F1', 'F2', 'F3', 'F4', 'F-only-prose']  # from prose doc
+sql_breaks   = ['F1', 'F2', 'F3', 'F4', 'F-only-sql']    # from SQL
 
 from v4cat import wedge
 result = wedge(prose_breaks, sql_breaks)
-# → {'in_a_not_b': ['Q-x'],   # ← prose mentions Q-x; SQL doesn't
-#    'in_b_not_a': ['Q-y'],   # ← SQL has Q-y; prose doesn't
-#    'in_both':    ['Q74', 'Q75', 'Q76', 'Q89']}
+# → {'in_a_not_b': ['F-only-prose'],   # ← prose mentions it; SQL doesn't
+#    'in_b_not_a': ['F-only-sql'],     # ← SQL has it; prose doesn't
+#    'in_both':    ['F1', 'F2', 'F3', 'F4']}
 ```
 
 The drift is real and named. Either:
 
-- prose mentions Q-x but it was never structurally adopted (delete
-  from prose, or run `introduce_break('Q-x', ...)` to add)
-- SQL has Q-y but prose doesn't reflect it (update prose)
+- prose mentions `F-only-prose` but it was never structurally
+  adopted (delete from prose, or run
+  `introduce_break('F-only-prose', ...)` to add)
+- SQL has `F-only-sql` but prose doesn't reflect it (update prose)
 
 Either way, the audit surfaces something to address.
 
@@ -595,16 +600,16 @@ Sometimes drift is more subtle: items in the *universe of
 discourse* that *neither* representation mentions.
 
 ```python
-all_breaks_we_care_about = ['Q74', 'Q75', 'Q76', 'Q89', 'Q90', 'Q91',
-                             'Q92', 'Q93']
+all_breaks_we_care_about = ['F1', 'F2', 'F3', 'F4',
+                            'F5', 'F6', 'F7', 'F8']
 
 from v4cat import kquery
 result = kquery(prose_breaks, sql_breaks,
                 universe=all_breaks_we_care_about)
-# → {'00': ['Q90', 'Q91', 'Q92', 'Q93'],   # ← SHARED BLINDNESS
-#    '01': ['Q-y'],
-#    '10': ['Q-x'],
-#    '11': ['Q74', 'Q75', 'Q76', 'Q89']}
+# → {'00': ['F5', 'F6', 'F7', 'F8'],   # ← SHARED BLINDNESS
+#    '01': ['F-only-sql'],
+#    '10': ['F-only-prose'],
+#    '11': ['F1', 'F2', 'F3', 'F4']}
 ```
 
 The 00 cell tells you *both representations are missing four
@@ -772,16 +777,18 @@ follow-ups:
   temporal axis, Klein-four core, Yoneda + Derrida, magma +
   pointfree topology, recursive schema, convergence, trace-
   thickening.
-- **Read `examples.md`** — domain templates beyond processors.
-- **Look at the parent repo's `symmetries.md` and
-  `symmetries.sql`** — the processor catalogue is the framework's
-  most extensively-developed application. ~24 specs, ~53 named
-  breaks, full retroactive-attribution example, Q92 consistency
-  rule.
+- **Read `examples.md`** — domain templates: programming languages,
+  processors, cryptographic primitives, file systems, mathematical
+  structures, OS architectures, ML model families.
+- **Bring your own domain.** Any structured artefact with descent,
+  named distinctions, and witnesses works. The framework's value
+  compounds the more you put into it.
 - **Explore the MCP resources**:
   - `catalogue://breaks` — inventory
   - `catalogue://retroactive` — retroactive cases
-  - `catalogue://q92_violations` — paged-spec consistency
+  - `catalogue://violations/{rule}` — domain-extension consistency
+    rules (the rule maps to a `<rule>_violations` view your
+    extension must define)
   - `catalogue://lineages/{id}` — descent chain
   - `catalogue://docs` — list of available documentation
 

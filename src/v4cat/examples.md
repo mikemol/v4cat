@@ -1,11 +1,12 @@
 # Examples — domain templates for the catalogue framework
 
-The framework was developed against the processor catalogue
-(`symmetries.md`, `symmetries.sql` in the parent repo), but it's
-designed to apply to any domain where structural distinctions
-accumulate. This file sketches templates for several other
-domains — enough to start cataloguing them, not exhaustive
-coverage.
+This file sketches starter templates for several domains the
+framework applies to — enough to begin cataloguing each, not
+exhaustive coverage. The framework itself is domain-agnostic;
+processors are one of several worked examples below, alongside
+programming languages, cryptography, databases, file systems,
+network protocols, mathematical structures, OS designs, and ML
+architectures.
 
 For each template:
 
@@ -23,7 +24,7 @@ For each template:
 
 ## Contents
 
-1. [Processor architectures (the canonical case)](#1-processor-architectures-the-canonical-case)
+1. [Processor architectures](#1-processor-architectures)
 2. [Programming languages](#2-programming-languages)
 3. [Cryptographic primitives](#3-cryptographic-primitives)
 4. [Database systems](#4-database-systems)
@@ -37,30 +38,38 @@ For each template:
 
 ---
 
-## 1. Processor architectures (the canonical case)
+## 1. Processor architectures
 
-Already in the parent repo as `symmetries.md` + `symmetries.sql`.
+A well-developed application domain for the framework.
 
-**Objects**: 6502, 6800, 4004, 68000, 68010, 68020, 68030, 80186,
-80286, 80386, 80287, 80387, 8087, 8051, AVR, MSP430, 8080, System/360,
-System/360/67, System/370, System/370/XA. Plus non-processor
-witnesses: Brainfuck, lambda calculus.
+**Objects**: classic and modern processor specs. Examples include
+8-bit micros (6502, 6800, 4004, 8080, 8051), 16/32-bit families
+(68000-68030, 80186-80386, 80287-80387, 8087), embedded
+controllers (AVR, MSP430), mainframes (System/360, System/360/67,
+System/370, System/370/XA, IBM z16). Plus non-processor formal
+systems used as foils: Brainfuck, lambda calculus.
 
-**Active breaks**: 53 (Z18-Z31 baseline; Z74-Z81 metamodel
-forward shadows; Q71-Q93 processor-introduced; BF-A..D Brainfuck
-distinctions; LC-α..δ lambda semantic-level slots).
+**Initial breaks to consider**: paging model, interrupt
+precedence, vector facility, modal specs (FPU rounding /
+precision modes), agent-level versus spec-level distinctions
+(coprocessor agents, multi-CPU shared memory), instruction
+classification (JMP/BRANCH/JSR/RTS/HALT), cache substrate
+state, privilege rings.
 
-**Temporal axis**: year of release (with chronological-vs-
-catalogue-exposition split).
+**Temporal axis**: year of release (with the chronological-vs-
+catalogue-exposition split that the framework's `year` and
+`catalogue_order` columns track).
 
-**Primary lineage chains**: Motorola 68k, Intel x86, Intel x87,
-IBM mainframe.
+**Primary lineage chains**: Motorola 68k family, Intel x86 family,
+Intel x87 coprocessor family, IBM mainframe family, embedded
+families (8051-derived, AVR-derived).
 
-**Convergence signal**: the most recent additions (80287, 68030,
-System/370/XA) introduced zero new breaks.
-
-This is the framework's most extensively-developed instance. Use
-it as a reference for what a converged metamodel looks like.
+**Convergence signal**: late additions in a family (e.g., the
+80287 against an already-developed x87 base, or 68030 against a
+68k base, or System/370/XA against a System/370 base) tend to
+contribute *zero new breaks* — only refinements of existing ones.
+This is the convergence signal described in
+[theory.md § 11](theory.md).
 
 ---
 
@@ -779,17 +788,20 @@ cataloguing is most informative.
 
 Every domain has implementation-alignment concerns — places where
 the structural decomposition the framework names doesn't cleanly
-match the data layout people use. The processor catalogue's T1-T5
-generalise: every domain has its own T1-Tn.
+match the data layout people use. Recording these as `tension`
+rows (rather than forcing them into ill-fitting break/witness
+shape) keeps the catalogue honest. Each domain accumulates its
+own T1-Tn list.
 
 ### (e) Cross-domain wedge audits are informative
 
 KQUERY between two domains' break sets surfaces cross-domain
 structural patterns. The 11 cell shows shared primitives (e.g.,
-both processors and OSes have privilege models — Q76 and OS-
-Security-Model are structurally related); the 10/01 cells show
-domain-specific specialisations; the 00 cell shows what neither
-domain catalogues but might be relevant to a meta-domain.
+both processors and operating systems have privilege models, and
+the corresponding breaks in the two domains are structurally
+related); the 10/01 cells show domain-specific specialisations;
+the 00 cell shows what neither domain catalogues but might be
+relevant to a meta-domain.
 
 This is the *open question 1* in `methodology.md`: schema
 interoperability across instances. As more domains are catalogued
@@ -817,6 +829,4 @@ them sustainable as cataloguing accumulates.
 
 *See also: `methodology.md` (operational design),
 `theory.md` (foundations), `tutorial.md` (walk-through),
-`README.md` (quick-start). The processor catalogue
-(`symmetries.md` / `symmetries.sql` in the parent repo) is the
-framework's most extensively-developed instance.*
+`README.md` (quick-start).*

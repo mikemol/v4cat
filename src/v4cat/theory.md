@@ -134,13 +134,17 @@ whatever property the break carves up the domain by.
 
 Examples:
 
-- *Privilege rings* (Q76 in the processor catalogue): `partition`
-  maps each instruction to {privileged, unprivileged}. The classes
-  partition the instruction set.
-- *Aliased state* (Q82): `partition` maps each architectural field
+- *Privilege rings* (a break a processor catalogue might carry):
+  `partition` maps each instruction to {privileged, unprivileged}.
+  The classes partition the instruction set.
+- *Aliased state*: `partition` maps each architectural field
   to {has-alias, no-alias}.
-- *Halt modes* (Q75): `partition` maps each spec's halt mechanism
+- *Halt modes*: `partition` maps each spec's halt mechanism
   to {sticky, resumable, multi-mode-halt}.
+
+(These illustrate the shape of `partition` for one possible
+domain. The same shape applies to any domain whose objects can
+be carved into equivalence classes by some property.)
 
 ### The preservation theorem
 
@@ -160,20 +164,22 @@ This is what makes a break *structural* rather than merely
 classificatory. A naming convention partitions the space; only a
 preservation theorem makes the partition load-bearing for analysis.
 
-### Examples of preservation theorems in the processor catalogue
+### Examples of preservation theorems
 
-Each is paired with the break it secures:
+Each is paired with the break it secures. The examples below come
+from a processor-catalogue context to make them concrete; the
+*shape* of preservation theorem applies to any domain.
 
-- **Bit-identical equality** (Z80): if two states have identical
+- **Bit-identical equality**: if two states have identical
   field values at time T, they remain identical at T+1 under
   deterministic step.
-- **Bus-trace equivalence** (Z25): if two implementations produce
+- **Bus-trace equivalence**: if two implementations produce
   identical bus traces through cycle T, they produce identical
   traces through T+k for all k.
-- **TermKind universality** (Z26): if an instruction is classified
-  as JMP/BRANCH/JSR/RTS/HALT at decode time, that classification
-  is preserved by the CFG analyser.
-- **Cache substrate state** (Q77): cache hit/miss outcome is
+- **Classification universality**: if an instruction is classified
+  by some scheme at decode time, that classification is preserved
+  by the analyser that consumes it.
+- **Cache substrate state**: cache hit/miss outcome is
   determined by substrate state, and that substrate state evolves
   deterministically under the spec's program — so a fixed program
   produces a fixed cache trajectory.
@@ -197,8 +203,7 @@ of objects), but every concrete domain-level break should.
 
 ## 3. Ordered axes and tropical queries
 
-A discovery from the processor catalogue work that turns out to be
-the methodology's deepest structural commitment.
+One of the methodology's deepest structural commitments.
 
 ### The observation
 
@@ -231,10 +236,9 @@ maximum).
 > derive every "first," "earliest," "latest" question the
 > catalogue can answer.**
 
-This is named as Q72 in the processor catalogue:
-**Symmetries-are-temporal-translation-invariances** — where
-"temporal" is read broadly as "an ordered axis along which
-evolution preserves the partition."
+This is the **symmetries-are-temporal-translation-invariances**
+commitment — where "temporal" is read broadly as "an ordered axis
+along which evolution preserves the partition."
 
 ### Time is one such axis; catalogue_order is another; domains add more
 
@@ -449,22 +453,26 @@ The methodology elevates `00` because:
 #### (a) It's structurally significant
 
 Some catalogue questions only have meaningful answers in the `00`
-cell. Example from the processor catalogue:
+cell. Schematically — for any consistency rule of the form
+"objects exhibiting A should also exhibit B":
 
 ```text
-U = specs that declare frame formats
-A = paged specs (page_table is not None)
-B = specs with restart-suitable frames
+U = objects within scope of the rule
+A = objects exhibiting property A
+B = objects exhibiting property B
 
 00 = U \ (A ∪ B)
-   = specs that have frames but neither paged nor restart-suitable
+   = objects in scope that exhibit neither A nor B
 ```
 
-The `80286` lands in `00` of this query. It's not a Q92
-violation (`10` would be: paged but no restart-suitable frame).
-It's the "could not have participated in productive virtual
-memory" cell — informationally rich and not visible from
-ordinary diff.
+The `00` cell isn't a violation of the rule (the rule fires on
+the `10` cell: A but not B). It's the "object outside the rule's
+reach entirely" cell — informationally rich and not visible from
+ordinary diff. A processor catalogue might find that the 80286
+lands in this cell of the paged/restart-suitable kquery (it has
+frames but neither paging nor restart-suitable framing); a
+language catalogue might find that statically-typed-without-
+inference languages land in the corresponding cell.
 
 #### (b) It refuses the metaphysics of coverage
 
@@ -494,9 +502,9 @@ KQUERY(A, B; U, normalize)
 
 Examples:
 
-- Case-folding (`normalize=str.lower`): `'Q89'` and `'q89'` agree
+- Case-folding (`normalize=str.lower`): `'F1'` and `'f1'` agree
 - Identifier canonicalisation (`normalize=lambda s: s.split('-')[0]`):
-  `'Q89-rev1'` and `'Q89-rev2'` agree
+  `'F1-rev1'` and `'F1-rev2'` agree
 - Lineage projection (`normalize=lineage_of`): siblings agree
 
 The quotient is itself a small symmetry-break of the read layer:
@@ -551,9 +559,10 @@ Several primitives in the catalogue's metamodel are magma-shaped:
   contents are spec-supplied. The default is bit-identical;
   α-equivalent and observational are admissible refinements.
 - **`StepRule`** — the slot is "advance the temporal coordinate
-  one tick"; contents are spec-supplied. 6502: `prepare ∘ bus ∘
-  latch`. Lambda: `find_redex ∘ substitute`. Brainfuck:
-  `dispatch_one_command`.
+  one tick"; contents are spec-supplied. Examples: a processor
+  spec supplies `prepare ∘ bus ∘ latch`, a lambda calculus
+  supplies `find_redex ∘ substitute`, a Turing-tape language
+  supplies `dispatch_one_command`.
 - **`BatchProtocol`** — the slot is "lockstep semantics for
   parallel rows"; contents are spec-supplied.
 - **`Space.cell_overflow`** — the slot is "what happens on
@@ -622,10 +631,10 @@ Pointfree topology gives us license to:
   re-derive under the richer algebra without re-declaration.
 
 This is structurally why **per-spec parameterisation is the
-universal escape valve** (Q73 in the processor catalogue). Whenever
-the framework's earlier commitment was too concrete, the resolution
-was to make it a per-spec declaration — i.e., to lift the concrete
-content into the per-spec algebra and let instances fall out.
+universal escape valve**. Whenever an earlier commitment turns
+out to be too concrete, the resolution is to make it a per-spec
+declaration — i.e., to lift the concrete content into the per-
+spec algebra and let instances fall out.
 
 ### Together with magma theory
 
@@ -725,34 +734,36 @@ mark whose meaning is always already pointing elsewhere.
 
 The catalogue refuses presence at every level:
 
-- **No foundational break.** Z18 (microcode-as-data) isn't a
-  privileged origin from which other breaks descend. It's named
-  because the 6502 work surfaced it; it remains revisable as
-  future objects contribute traces.
-- **No foundational origin.** The originator of Q89 isn't a fact
-  stamped into the schema. It's *derivation* — tropical MIN-year
-  over origin-class witness edges. The earlier reading wasn't
-  wrong; it was what the trace-set then licensed.
+- **No foundational break.** No break is a privileged origin from
+  which other breaks descend. Each is named because some object's
+  analysis surfaced it; each remains revisable as future objects
+  contribute traces.
+- **No foundational origin.** The originator of any break isn't
+  a fact stamped into the schema. It's *derivation* — tropical
+  MIN-year over origin-class witness edges. An earlier reading
+  isn't wrong; it's what the trace-set then licensed.
 - **No foundational schema.** Schema breaks emerged additively;
   none was specified in advance. The schema is itself a sediment
   of traces.
-- **No foundational object.** Specs and breaks are constituted
+- **No foundational object.** Objects and breaks are constituted
   by their participation in the witness graph. Nothing about
-  a spec is "intrinsic" outside its relations.
+  an object is "intrinsic" outside its relations.
 
 ### The retroactive moment
 
 The acutest Derridean moment in the methodology is the retroactive-
-attribution pattern. In the processor catalogue:
+attribution pattern. Schematically (with a processor catalogue
+example to make it concrete):
 
-- 1985: the catalogue analyses the 80386, names Q89 (paging),
-  records the 80386 as Q89's originator. This is what the trace-
-  set then licenses.
-- Decades-later catalogue session: the System/360/67 (1965) is
-  examined, found to have had DAT (paging) twenty years earlier.
-  An `origin` witness from System/360/67 is added.
-- *The originator of Q89 is now System/360/67* — automatically,
-  via the view's MIN-year query.
+- 1985 (or whenever the catalogue is built): the catalogue
+  analyses object β (the 80386), names break F1 (paging),
+  records β as F1's originator. This is what the trace-set then
+  licenses.
+- Later catalogue session: an earlier object α (System/360/67,
+  1965) is examined, found to have already exhibited the break
+  twenty years earlier. An `origin` witness from α is added.
+- *The originator of F1 is now α* — automatically, via the view's
+  MIN-year query.
 
 Crucially: **the prior reading wasn't false.** It was the originator
 *as the trace-set then licensed*. The new originator is the
@@ -843,11 +854,14 @@ ones did:
 - **S5**: per-break-family detail tables — domain-specific (the
   framework leaves these to extensions).
 - **S6**: `break_axes` table — per-break axis classification;
-  forced by Q71 (the 4/5-axis tuple).
+  forced by the meta-claim that breaks should be tagged with
+  their axes.
 - **S7**: `tensions` table — implementation-alignment concerns;
-  forced by T1-T5 in the processor catalogue.
+  forced by the need to record meta-claims that don't yet have
+  the structure of a break.
 - **S8**: `scope` column on witnesses — agent vs spec
-  distinction; forced by 8087's agent-level Q87 precedence.
+  distinction; forced when one named witness object turns out to
+  contain multiple distinguishable contributors.
 - **S9**: `spec_axes` + `spaces` tables — per-spec 5-axis
   declarations; forced by Brainfuck's per-Space refinements.
 - **S10**: `break_invariants` table — Z78's (partition,
@@ -1076,27 +1090,23 @@ ones.
 Convergence shows up as: **N consecutive additions to the
 catalogue produce zero new break entries.**
 
-In the processor catalogue:
+For example, in a processor catalogue's growth history:
 
-- 8087 (1980) introduced Q88 (joint instruction execution).
-- 80186 (1982) introduced Q86 (microcode loops); promoted Q85
-  from deferred.
-- 80286 (1982) introduced Q87 (modal specs) at spec level.
-- 80287 (1986) — *no new breaks*. Confirmations + Q87
-  multi-dim refinement.
-- 80386 (1985) introduced Q89 (paging).
-- 68000 (1979) introduced Q76, Q78, Q79, Q80, Q90 (retroactively).
-- 68010 (1982) introduced Q92.
-- 68030 (1987) — *no new breaks*. Confirmations + Q77 multi-cache.
-- System/360 (1964) introduced Q91 (programmable agents).
-- System/370 (1970) introduced Q93 (CAS); retroactive Q87, Q89,
-  Q81 first witness.
-- System/370/XA (1983) — *no new breaks*. Refinements of Q87
-  (AMODE), Q89 (DAS), Q91 (subchannels).
+- Several early processors each introduce one or two new breaks
+  (paging, modal specs, joint instruction execution, ...).
+- Later processors in the same lineage add successively fewer
+  new breaks; they mostly *confirm* existing breaks
+  (cross-vendor) or contribute *refinements* of them.
+- Eventually a streak of additions produces *zero new breaks*:
+  the new objects fit entirely within the metamodel that prior
+  additions already named. That's the convergence signal — the
+  metamodel for the processor domain is closing.
 
-Three of the most recent additions (80287, 68030, System/370/XA)
-contributed *zero new breaks*. That's the convergence signal —
-the metamodel for the processor domain is closing.
+The same pattern applies to any domain. A language catalogue
+converges when new languages stop forcing new structural
+primitives and start refining ones already named (e.g., a new
+language introduces a slight variant of an already-catalogued
+gradual-typing model rather than a wholly new typing discipline).
 
 ### What convergence means
 
@@ -1146,18 +1156,20 @@ The new derivation may differ from the old, but neither was wrong
 
 ### The retroactive case
 
-The cleanest example. In the processor catalogue:
+The cleanest example, schematically (with a processor catalogue
+illustration to make it concrete):
 
-- 1985: catalogue analyses 80386, records 80386 as Q89's originator.
-- Years later: catalogue examines System/360/67, adds an `origin`
-  witness from it.
+- Initial analysis: catalogue records object β (the 80386, year
+  1985) as the originator of break F1 (paging).
+- Later session: catalogue examines an earlier object α (the
+  System/360/67, year 1965) and adds an `origin` witness from it.
 - Now: the originator query (`MIN(year)` over origin-class) returns
-  System/360/67.
+  α — the earlier originator.
 
-The 1985 reading isn't corrected. The 80386 still holds its
+The first reading isn't corrected. β still holds its
 `catalogue-introduces` witness. The `first_seen` view still returns
-80386. What changed: the System/360/67 now has an `origin` witness
-that the MIN-year query picks up.
+β. What changed: α now has an `origin` witness that the MIN-year
+query picks up.
 
 There's no `RETRO` verb because there's no correction. There's
 just additional trace material and re-derivation.
@@ -1244,11 +1256,12 @@ relaxing them — partial-ordered time, continuous time, non-
 deterministic steps — needs a *different* framework that shares
 some structure with this one but isn't subsumed by it.
 
-The Q81 (multi-CPU sibling-framework boundary) in the processor
-catalogue is the prototype of this stance. Multi-CPU shared-memory
-systems are *adjacent* to the framework's identity but not
-subsumed; the framework models them via *composition of sibling
-specs*, each running its own per-CPU framework instance.
+The framework's `BOUNDARY` verb is the operational form of this
+stance. A break that's *adjacent* to the framework's identity but
+not subsumed by it (e.g., a candidate distinction whose proper
+treatment requires a sibling framework's machinery) gets recorded
+with a `sibling-boundary` witness rather than absorbed into the
+metamodel.
 
 The same stance applies more broadly: sibling frameworks compose
 where their hom-sets agree on shared substrates.

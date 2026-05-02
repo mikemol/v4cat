@@ -209,4 +209,4 @@ addressable catalogue resources by purpose, not by package name.
 
 ## License
 
-(Inherits from parent repo.)
+MIT. See [LICENSE](../../LICENSE) at the repo root.

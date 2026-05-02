@@ -70,27 +70,67 @@ example domains rather than the privileged one.
   repo" reference removed; layout-table examples line updated;
   prompt names corrected.
 
-## Deferred
+## Deferred work — completed in v0.2.1
 
-The following remain processor-flavoured but their bias is
-example-heavy rather than structural. Listed in
-priority-of-update order:
+The deferred doc rewrites listed in v0.2.0's audit are done in
+v0.2.1:
 
-1. **`tutorial.md`** (~21 mentions). User-facing walk-through.
-   Should be next when this audit continues.
-2. **`methodology.md`** (~85 mentions). The bias is mostly in
-   running examples that explain the design with processor
-   specifics. The structural arguments are already domain-
-   agnostic; rewriting the examples is mechanical but voluminous.
-3. **`theory.md`** (~38 mentions). Similar — the abstract
-   arguments are clean, but the worked examples (and the running
-   case study in § 14) lean on processor names. Structurally
-   sound; cosmetically biased.
-4. **`examples.md`** (~10 mentions). This file's purpose is
-   domain templates, so processor mentions here are
-   *contextually correct* — processors are ONE of the templates,
-   not privileged. The remaining mentions are likely fine as-is;
-   a quick read should confirm.
+1. **`tutorial.md`** — generic alpha/beta/F1 examples now
+   throughout the wedge audit; processor-catalogue parenthetical
+   ("Q81 — multi-CPU shared-memory") removed; closing references
+   to the parent repo's `symmetries.md` / `q92_violations`
+   replaced with the parametric `catalogue://violations/{rule}`
+   resource and a list of domain templates from `examples.md`.
+   Three remaining processor mentions are list items where
+   processor sits alongside other domains.
+
+2. **`methodology.md`** — opening section rewritten to lead with
+   domain-agnostic framing instead of "the processor catalogue is
+   one application." The "How `symmetries.md` and `symmetries.sql`
+   map onto the ISA" section, which detailed the parent repo's
+   commit history, replaced with a generic worked example
+   ("adding an object that forces a new break"). The K_QUERY paging
+   example reframed as a generic A/B consistency rule with a
+   parenthetical note that processor catalogues bind A=paged,
+   B=restart-suitable. The MCP example dialogue now uses
+   omega/F-new/synthetic data instead of z16/Q94/mainframe. The
+   open-questions section's Q89-paging cross-domain example
+   reframed generically.
+
+3. **`theory.md`** — § 2's preservation-theorem examples flagged
+   as processor-catalogue context; § 3's "Q72 in the processor
+   catalogue" reduced to an ordinary structural claim; § 4's K_QUERY
+   `00`-cell paging example reframed as a generic
+   "rule-of-the-form-A-requires-B" schematic with a parenthetical
+   processor illustration. § 5's StepRule examples list processor
+   alongside lambda calculus and Brainfuck. § 8's Derridean
+   commitment list (no foundational break / origin / schema /
+   object) now uses generic phrasing. § 11's convergence section's
+   long enumeration of x86 / 68k / mainframe processor history
+   replaced with a generic "in a processor catalogue's growth
+   history" sketch that names the same convergence shape without
+   the specific year/break tuples. § 12's retroactive-attribution
+   example now uses α/β with the processor catalogue's
+   80386/System/360/67 case as a parenthetical illustration.
+   § 13's `Q81 (multi-CPU sibling-framework boundary)` framing
+   replaced with a discussion of the `BOUNDARY` verb's general
+   stance.
+
+4. **`examples.md`** — opening rewritten to lead with
+   domain-agnostic framing. Section 1 renamed from "Processor
+   architectures (the canonical case)" to just "Processor
+   architectures." The processor section's parent-repo references
+   removed, the Q-numbered break enumeration replaced with a
+   list of *kinds of breaks* (paging, interrupts, vector facility,
+   ...) so the section reads as a domain template like the
+   others. Closing reference to the parent repo's
+   `symmetries.md` / `symmetries.sql` removed.
+
+5. **`README.md`** — license note updated from "(Inherits from
+   parent repo.)" to "MIT. See [LICENSE](../../LICENSE)."
+
+Verification: 160 tests pass; 100% statement and branch coverage
+holds (no code changed). Released as v0.2.1.
 
 ## What's NOT bias
 

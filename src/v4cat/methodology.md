@@ -1,20 +1,19 @@
 # Symmetry-Break Cataloguing — a generic methodology with a small ISA
 
-The processor catalogue in `symmetries.md` and `symmetries.sql` is one
-application of a more general methodology: *cataloguing a domain by
-accumulating symmetry breaks, with witnesses, refinements, and
-wedge-product audits — where time and lineage are themselves
-breaks-on-objects, so attribution (including the so-called
-"retroactive" case) emerges as a derived query rather than a
-primitive verb*. This document factors out the methodology into
-something domain-agnostic.
+This methodology catalogues a domain by accumulating *symmetry breaks*
+— named structural distinctions — with witnesses, refinements, and
+wedge-product audits. Time and lineage are themselves breaks-on-
+objects, so attribution (including the so-called "retroactive" case)
+emerges as a derived query rather than a primitive verb. The framework
+is domain-agnostic; this document spells out the design.
 
-## What's generalisable
+## What the methodology gives you
 
-The processor catalogue exhibits patterns that aren't processor-specific:
-
-1. **Domain of objects**: processors / non-processor witnesses (Brainfuck,
-   lambda calculus). Generic: a set of objects in some domain.
+1. **Domain of objects**: a set of structured artefacts the catalogue
+   tracks — programming languages, processors, file system formats,
+   cryptographic primitives, ML architectures, database systems,
+   schema-versions of an evolving system, formal systems, anything
+   with structure worth cataloguing.
 2. **Symmetry breaks**: named structural distinctions. Generic: named
    partitions of the object space.
 3. **Witnesses**: per-(object, break) edges with contribution kinds
@@ -43,24 +42,27 @@ The processor catalogue exhibits patterns that aren't processor-specific:
 10. **Wedge-product audits**: cross-checking representation A against
     representation B to find gaps. Generic: paired-source reconciliation.
 
-None of these depend on processor architectures. The methodology applies
-to any domain where:
+The methodology applies to any domain where:
 
 - Objects accumulate over time
 - Their structural distinctions can be named as symmetry breaks
 - Multiple witnesses confirm or refine each break
 - The catalogue's exposition order may differ from chronological order
 
-## Examples of other applicable domains
+## Examples of applicable domains
 
 - **Programming languages**: breaks like "type-system soundness mode"
   (gradual / strict / latent), "garbage collection model" (refcount /
   tracing / region), "concurrency primitives" (threads / actors / fibers
   / async). Witnesses: C, Haskell, Rust, Python, Erlang, Go. Retroactive
   attribution: ALGOL 60 introduced lexical scoping, not LISP.
+- **Processor architectures**: breaks like "paging model", "interrupt
+  precedence", "vector facility". Witnesses: 8086, 80386, 68030,
+  System/360/67, IBM z16. Retroactive attribution: System/360/67
+  introduced two-level paging, not the 80386.
 - **Cryptographic primitives**: breaks like "post-quantum security",
   "side-channel resistance", "constant-time guarantees". Witnesses:
-  RSA, ECC, ML-KEM, AES, ChaCha20. Q-numbered breaks track structural
+  RSA, ECC, ML-KEM, AES, ChaCha20. Numbered breaks track structural
   innovations (random oracle model, IND-CCA security, ...).
 - **Database systems**: breaks like "consistency model" (strong /
   eventual / causal), "partitioning scheme" (hash / range / consistent-
@@ -68,9 +70,9 @@ to any domain where:
   Cassandra, FoundationDB, Spanner.
 - **Mathematical structures**: breaks like "associativity", "identity",
   "inverses", "commutativity". Witnesses: magma, semigroup, monoid,
-  group, abelian group, ring, field. Q-numbered breaks are *axioms*; the
+  group, abelian group, ring, field. Numbered breaks are *axioms*; the
   refinement-axiom-by-refinement-axiom approach is what magma theory
-  *already does* (and what symmetries.md's "lineage" section names).
+  *already does*.
 - **File systems**: breaks like "journaling", "copy-on-write",
   "snapshots", "checksums", "deduplication". Witnesses: ext4, ZFS,
   btrfs, APFS, ReFS.
@@ -80,15 +82,17 @@ to any domain where:
 
 The methodology's value: it produces *queryable structure* that survives
 context loss across time, vendor disagreements, and shifting priorities.
-A processor catalogue accumulated over months becomes a graph that
-answers "which break was originated where?" in a query rather than via
-human memory.
+A catalogue accumulated over months becomes a graph that answers "which
+break was originated where?" in a query rather than via human memory.
 
 ## The data shape (NOSQL-flavour)
 
-The processor catalogue uses a relational schema, but the underlying
-data is fundamentally a **labelled bipartite graph**: breaks ↔ objects,
-with typed edges. Three NOSQL representations capture it naturally:
+The framework ships a relational schema, but the underlying data is
+fundamentally a **labelled bipartite graph**: breaks ↔ objects, with
+typed edges. Three NOSQL representations capture it naturally. The
+running example below uses a paging-related break (`Q89`) and a few
+processor witness objects — one of many possible illustrations; the
+shape is identical for any domain.
 
 ### Document store (JSON-shaped)
 
@@ -156,9 +160,8 @@ Each fact is one triple; SPARQL handles tropical queries naturally
 (`SELECT ?spec WHERE { ?spec :originated ?b . } ORDER BY ASC(?year) LIMIT 1`).
 
 All three shapes are equivalent at the data-content level; they differ
-in which queries are natural. The relational SQL we used in
-`symmetries.sql` is a fourth equivalent shape — relational normal form
-of the same graph.
+in which queries are natural. The framework's `schema.sql` is a fourth
+equivalent shape — relational normal form of the same graph.
 
 The ISA below abstracts over which shape the runtime chooses.
 
@@ -179,10 +182,10 @@ This means:
   Recorded as edges of kind `inherits` or `descended-from`; "what does
   X inherit from Y?" becomes a transitive-closure query.
 - **Catalogue-exposition order** is a third such structural attribute —
-  separate from year because exposition follows the framework's design
-  lineage rather than chronology. (For the processor catalogue, 6502
-  is exposition-order 1 even though the System/360 predates it by 11
-  years.) "First-seen-in-catalogue" is MIN(exposition_order) over
+  separate from year because exposition follows the analyst's design
+  lineage rather than chronology. (A catalogue may add objects in an
+  order that doesn't track their year of introduction; that's
+  expected.) "First-seen-in-catalogue" is MIN(exposition_order) over
   `catalogue-introduces` edges.
 
 Once these three are recorded as primary data, **attribution is always
@@ -193,17 +196,19 @@ is just an arithmetic difference, named "retroactive" only when
 positive.
 
 The implication: the ISA below has *no* `RETRO` verb. The first time
-the catalogue analyses Q89 at the 80386, an `origin` witness from
-80386 is added. Later, when the System/360/67 is examined, an `origin`
-witness from System/360/67 is added. The view's MIN-year query
-naturally picks the System/360/67 (1965) over the 80386 (1985); no
-correction step is needed.
+the catalogue analyses break F1 at object β (year 1985), an `origin`
+witness from β is added. Later, when an earlier-but-not-yet-
+catalogued object α (year 1965) is examined, an `origin` witness
+from α is added. The view's MIN-year query naturally picks α
+(1965) over β (1985); no correction step is needed. The catalogue
+*re-derives* the originator on every read, so the answer always
+reflects the current state of the witness graph.
 
-This is the same move the framework's own Q72 (cross-cutting quotient)
-names: every symmetry plane has a normal axis along which the
-symmetric side parameterises. Time is the canonical axis. Treating
-time as a break-on-objects (rather than a verb-on-the-catalogue) is
-the methodology's structural commitment to its own Q72.
+This is the methodology's structural commitment to a normal axis on
+every symmetry plane: every break has a temporal axis along which
+attribution parameterises. Treating time as a break-on-objects
+(rather than a verb-on-the-catalogue) is the framework's
+operational realisation of that commitment.
 
 ## The Klein-four read core
 
@@ -283,19 +288,25 @@ For a bounded universe `U`:
 00 = U \ (A ∪ B)    — what falls outside both representations
 ```
 
-Examples from the catalogue:
+A consistency-check example, schematically (any domain that has a
+"property A *requires* property B" rule looks like this):
 
 ```text
-U = paged-spec frames declared
-A = paged specs (page_table != None)
-B = specs with restart-suitable frames
+U = objects within scope of the rule
+A = objects that exhibit property A
+B = objects that exhibit property B
 
-11 = paged AND restart-suitable    (good: virtual memory works)
-10 = paged BUT NOT restart-suitable (Q92 violation)
-01 = restart-suitable BUT NOT paged (fine: pre-VM specs)
-00 = neither paged nor restart-suitable (e.g. 80286 — could not
-     participate in productive virtual memory at all)
+11 = both A and B          (rule satisfied)
+10 = A but not B           (rule violated)
+01 = B but not A           (fine: B without A is allowed)
+00 = neither               (interesting: outside the rule's reach)
 ```
+
+Concretely, a processor catalogue might bind `A` = "paged" and
+`B` = "restart-suitable frames"; a database catalogue might bind
+`A` = "row-locking" and `B` = "MVCC"; a language catalogue might
+bind `A` = "static types" and `B` = "type inference". The
+classifier and its four cells are the same.
 
 The `00` cell isn't a violation of consistency; it's a
 *methodological object* in its own right — the place where the
@@ -317,9 +328,9 @@ KQUERY tightens the Yoneda+Derrida commitments:
     other does not)
   - `00` — trace of absence / shared blindness; what's *excluded*
     from both, and constitutive of what the comparison can mean
-- **Errors become geometry.** Q92 violations aren't an exception
-  type; they're points in the `10` cell of a particular KQUERY.
-  Convergence is `10 ∪ 01 = ∅` for a chosen comparison.
+- **Errors become geometry.** Consistency-rule violations aren't an
+  exception type; they're points in the `10` cell of a particular
+  KQUERY. Convergence is `10 ∪ 01 = ∅` for a chosen comparison.
 - **Paradigms are derived regions.** "Paradigm" is just a referent
   the user constructs explicitly; once explicit, it's subject to
   the same comparison machinery as everything else. There's no
@@ -349,30 +360,29 @@ Add a new object of a given kind. Kinds: `break`, `object`, `axis`,
 and lineage enter the graph.
 
 ```text
-INTRODUCE break  Q89    name="Paging" axes=[spatial]
-INTRODUCE object 80386  kind=processor year=1985 lineage=[x86, intel]
-INTRODUCE object system_360_67 kind=processor year=1965 lineage=[mainframe, ibm]
+INTRODUCE break  F1    name="Some structural distinction" axes=[spatial]
+INTRODUCE object beta  year=1985 lineage=[some-family]
+INTRODUCE object alpha year=1965 lineage=[earlier-family]
 ```
 
 #### `WITNESS <subject> <break> <kind> [notes]`
 
-Record a contribution edge. Kinds form the methodology's vocabulary
-(documented inline in `symmetries.sql`'s S3 comment):
+Record a contribution edge. Kinds form the methodology's vocabulary:
 `origin`, `catalogue-introduces`, `confirms`, `refines`,
 `first-witness`, `precedes`, `cross-vendor`, `inherits`,
 `deferred-candidate`, `sibling-boundary`, `gates-with-fault`.
 
 ```text
-WITNESS system_360_67 Q89 origin
-WITNESS 80386         Q89 catalogue-introduces
-WITNESS 80386         Q89 origin
-WITNESS 68030         Q89 cross-vendor "tree-structured 1-4 levels"
+WITNESS alpha F1 origin
+WITNESS beta  F1 catalogue-introduces
+WITNESS beta  F1 origin
+WITNESS gamma F1 cross-vendor "an alternate realisation of F1"
 ```
 
 The originator emerges from the witness graph plus the year attribute:
 `MIN(s.year)` over `origin` and `catalogue-introduces` edges. With
-both System/360/67 (1965) and 80386 (1985) carrying `origin` edges to
-Q89, the originator is System/360/67 — derived, not declared.
+both alpha (1965) and beta (1985) carrying `origin` edges to F1, the
+originator is alpha — derived, not declared.
 
 #### `REFINE <break> <object> <name> [description]`
 
@@ -380,8 +390,8 @@ Annotate a (break, object) edge with a named refinement. Multiple
 refinements per edge admitted.
 
 ```text
-REFINE Q89 system_370_xa dynamic-address-spaces "multi-context"
-REFINE Q89 system_370_xa access-register-mode  "AR.ASN selects context"
+REFINE F1 delta variant-a "first refinement of F1 at delta"
+REFINE F1 delta variant-b "second refinement of F1 at delta"
 ```
 
 #### `KQUERY <left> <right>; <universe> <equivalence> <emit>`
@@ -393,16 +403,17 @@ closures, snapshots, expected covers — any predicate over the
 universe) and returns the four-cell membership partition.
 
 ```text
-KQUERY symmetries_md_breaks symmetries_sql_breaks emit=10,01
+KQUERY prose_breaks structured_breaks emit=10,01
    → drift between prose and structured form
 
-KQUERY introduced_objects   objects_with_witnesses emit=10
+KQUERY introduced_objects objects_with_witnesses emit=10
    → which introduced objects lack any witness?
 
-KQUERY required_q92_frames  actual_restart_suitable emit=10
-   → Q92 violations: paged specs without restart-suitable frames
+KQUERY rule_premises rule_conclusions emit=10
+   → consistency-rule violations: objects satisfying the
+     premise but not the conclusion of a domain rule
 
-KQUERY declared_breaks      observed_phenomena emit=01 universe=U
+KQUERY declared_breaks observed_phenomena emit=01 universe=U
    → which observed phenomena are uncovered by the schema?
 
 KQUERY a b emit=00 universe=U
@@ -427,7 +438,7 @@ Mark a break as a deferred candidate (named but not structurally
 adopted). Sets a witness with kind=`deferred-candidate`.
 
 ```text
-DEFER Q85    -- MSP430 introduced Q85 as a deferred candidate
+DEFER F4    -- one object introduced F4 as a deferred candidate
 ```
 
 #### `PROMOTE <break> [reason]`
@@ -436,16 +447,18 @@ Promote a deferred break to active. Requires a recent witness with
 kind=`confirms` or `first-witness` from a different object.
 
 ```text
-PROMOTE Q85 reason="80186 second witness"
+PROMOTE F4 reason="second independent witness"
 ```
 
 #### `BOUNDARY <break> <reason>`
 
 Mark a break as a deliberate metamodel non-extension (the
-sibling-framework boundary). Q81 is the canonical example.
+sibling-framework boundary). Use it when a candidate distinction is
+real and adjacent to your metamodel, but you've decided the
+metamodel shouldn't try to absorb it.
 
 ```text
-BOUNDARY Q81 "multi-CPU systems handled via sibling composition"
+BOUNDARY F-sib "this distinction lives in a sibling framework"
 ```
 
 ### Schema-evolution verbs
@@ -455,18 +468,22 @@ new structural primitive is forced.
 
 #### `KIND.NEW <name> <attr_schema>`
 
-Define a new object kind. The processor catalogue's `tension` kind
-was added at S7; a future kind might be `theorem` or `proof`.
+Define a new object kind. The framework ships with `break`, `object`,
+and `tension`; a domain extension might add `theorem`, `proof`,
+`benchmark`, or anything else its analysis requires.
 
 #### `PREDICATE.NEW <name> <signature>`
 
-Define a new edge predicate. Adding `precedes` (introduced at S8 in
-the symmetries-catalogue work) is an example.
+Define a new edge predicate. Adding new witness kinds (e.g.
+`precedes`, `gates-with-fault`) when a domain forces them follows
+this pattern.
 
 #### `AXIS.NEW <name>`
 
-Define a new meta-axis. The 6800 work added `eventual` to the
-original 4-axis tuple via this verb.
+Define a new meta-axis. Examples of axes the framework's defaults
+already include: `spatial`, `temporal`, `parallel`, `eventual`,
+`meta`. New ones (e.g., `eventual` was added when needed) follow
+the same additive pattern.
 
 These three verbs are *schema-breaks of the meta-schema* — each one
 records that the methodology's own data shape has admitted a new kind
@@ -508,16 +525,20 @@ over `KQUERY`):
 - **`MIXED(break)`** — true if break commits to ≥ 2 axes.
   Equivalent to `KQUERY(axes_of(break), {single_axis}, emit=10)`
   being non-empty for any single-axis predicate.
-- **`CONSISTENCY('q92')`** — Q92 violations.
-  Equivalent to `KQUERY(paged_specs, restart_suitable_specs, emit=10)`.
+- **`CONSISTENCY(rule)`** — domain-extension consistency violations,
+  parametric over rule name. The rule maps to a `<rule>_violations`
+  view that the loaded extension defines. Equivalent to
+  `KQUERY(rule_premise_set, rule_conclusion_set, emit=10)` for the
+  domain's specific premise / conclusion predicates.
 - **`WEDGE(a, b)`** — equivalent to `KQUERY(a, b, emit=10,01)`.
 - **`COVERAGE(a, b)`** — equivalent to `KQUERY(a, b, emit=10,01,11)`.
 - **`BLIND(a, b, U)`** — equivalent to `KQUERY(a, b, U, emit=00)`.
 
 ## The methodology's recurring shape
 
-Across the processor catalogue, a few patterns recur. They're not part
-of the ISA per se but constitute the *practice* of using it:
+Across catalogues built with this framework, a few patterns recur.
+They're not part of the ISA per se but constitute the *practice* of
+using it:
 
 - **Start abstract.** The seed schema has only the most abstract
   structure (`breaks` table with `(number, name)`). Add columns / tables
@@ -534,77 +555,70 @@ of the ISA per se but constitute the *practice* of using it:
   exposition order versus chronology.
 - **Schema breaks are additive.** Don't drop columns; add new ones.
   `ALTER TABLE ADD COLUMN` is the typical move; `CREATE TABLE` for
-  genuinely new raw structure (S6+ in `symmetries.sql`).
+  genuinely new raw structure that domain extensions force.
 - **Derived properties live in views.** Status, origin, retroactive
   gap, consistency violations — none belong in the raw data.
 - **Wedge-product audits keep representations consistent.** When a
-  structural artefact has multiple representations (e.g.,
-  `symmetries.md` prose ↔ `symmetries.sql` records), periodically
-  check that each fact in one is reflected in the other. Drift is
-  information.
+  structural artefact has multiple representations (e.g., a prose
+  description ↔ a structured catalogue), periodically check that
+  each fact in one is reflected in the other. Drift is information.
 - **Convergence shows up as "no new breaks in N consecutive
   additions."** When a domain's metamodel is closing, additions
-  become refinements rather than new structural primitives. The 68030
-  and System/370/XA in the processor catalogue are convergence
-  signals.
+  become refinements rather than new structural primitives. Late-
+  arriving objects that *only* trigger refinements (no new
+  breaks) are convergence signals.
 
-## How `symmetries.md` and `symmetries.sql` map onto the ISA
+## A worked example — adding an object that forces a new break
 
-Each commit in the processor catalogue corresponds to a sequence of
-ISA operations. For example, the 8087 commit (a19b2ae) maps to:
-
-```text
-INTRODUCE object 8087 kind=processor year=1980 lineage=[x87, intel]
-
-INTRODUCE break Q88 name="Joint instruction execution" axes=[parallel]
-WITNESS   8087 Q88 origin
-WITNESS   8087 Q88 catalogue-introduces
-
-REFINE Q85 8087 interaction-model-enum
-       "AgentInteractionModel: CONFIG_AND_GO | COPROCESSOR"
-WITNESS 8087 Q85 refines
-
-WITNESS 8087 Q87 precedes
-        "Agent-level modal behaviour (CW selects rounding × precision);
-         precedes spec-level Q87 at 80286"
-```
-
-The System/370 commit (ee54473) — note the absence of any `RETRO`
-verb. The chronological priority emerges from the year attributes:
+The typical sequence when a new object is added to a catalogue and
+forces a new break:
 
 ```text
-INTRODUCE object system_370    kind=processor year=1970 lineage=[mainframe, ibm]
-INTRODUCE object system_360_67 kind=processor year=1965 lineage=[mainframe, ibm]
+INTRODUCE object beta year=1980 lineage=[some-family]
 
-INTRODUCE break Q93 name="Conditional atomicity" axes=[temporal]
-WITNESS   system_370 Q93 origin
-WITNESS   system_370 Q93 catalogue-introduces
+INTRODUCE break F-new name="Some structural distinction" axes=[parallel]
+WITNESS   beta F-new origin
+WITNESS   beta F-new catalogue-introduces
 
--- Q87 was introduced at the 80286 commit (catalogue-introduces).
--- Now we add an origin edge from system_370. The view's MIN-year
--- naturally picks 1970 over 1982; "retroactive" is a derived label.
-WITNESS system_370    Q87 origin
-
--- Same shape for Q89: 80386 catalogue-introduced; system_360_67 origin.
-WITNESS system_360_67 Q89 origin
-
-WITNESS system_370 Q81 first-witness
-        "Multi-CPU shared memory with SIGP"
+REFINE F-existing beta variant-name
+       "specifies how beta realises an already-known break"
+WITNESS beta F-existing refines
 ```
 
-The wedge-product audit (the user's correction step) is:
+A retroactive case — an earlier-but-not-yet-catalogued object becomes
+the originator after the fact, with no `RETRO` verb:
 
 ```text
-WEDGE symmetries.md symmetries.sql
-  → flagged: BF-A..D missing from .sql; LC-α..δ missing;
-             Z74-Z78, Z81 missing; Q71-Q73 missing; T1-T5 missing;
-             per-break axes missing; agent-vs-spec scope missing
-  → response: schema-breaks S6-S10 added; missing breaks added;
-              views added
+INTRODUCE object delta year=1970 lineage=[earlier-family]
+INTRODUCE object alpha year=1965 lineage=[much-earlier-family]
+
+INTRODUCE break F-temporal name="A temporal-axis distinction" axes=[temporal]
+WITNESS   delta F-temporal origin
+WITNESS   delta F-temporal catalogue-introduces
+
+-- Earlier addition: F-old was introduced at gamma's commit
+-- (catalogue-introduces). Now we add an origin edge from alpha. The
+-- view's MIN-year naturally picks 1965 over gamma's year;
+-- "retroactive" is a derived label.
+WITNESS alpha F-old origin
 ```
 
-This shows that the existing artefacts are already an instance of the
-methodology — they just weren't named as such.
+A wedge-product audit between two representations of the same
+structural content — for example, prose documentation and the
+structured catalogue:
+
+```text
+WEDGE prose_breaks structured_breaks
+  → flagged: items in prose missing from the structured catalogue;
+             items in the structure missing from prose;
+             representational drift surfaced as actionable diff
+  → response: add the missing items to whichever side is canonical,
+              or flag the divergence as a structural discovery.
+```
+
+This is how an existing artefact becomes an instance of the
+methodology — the methodology names what good cataloguing already
+does.
 
 ## Reference implementation sketch
 
@@ -615,7 +629,7 @@ relational shape):
 class SymmetryCatalogue:
     def __init__(self, db_path: str):
         self.conn = sqlite3.connect(db_path)
-        self._bootstrap()    # mirrors symmetries.sql S0-S10
+        self._bootstrap()    # mirrors schema.sql S0-S11
 
     def introduce(self, kind: str, id_: str, **attrs):
         if kind == 'break':
@@ -672,9 +686,9 @@ The Model Context Protocol (MCP) is Anthropic's standard for letting
 LLM clients call tools, read resources, and invoke prompts against a
 server. An MCP server exposing the catalogue makes the methodology
 *interactively maintainable* by any MCP-aware client (Claude Desktop,
-Claude Code, other agents): new processor analyses become tool calls;
-audits become resource fetches; templates for analyzing a new spec
-become prompts.
+Claude Code, other agents): new object analyses become tool calls;
+audits become resource fetches; templates for analyzing a new
+witness object become prompts.
 
 ### Tools (the ISA verbs as callable functions)
 
@@ -713,7 +727,7 @@ catalogue://objects                 → all objects (specs / non-spec witnesses)
 catalogue://objects/{id}            → one object with its contributions
 catalogue://retroactive             → derived: breaks with origin year < first-seen year
 catalogue://tensions                → tensions list with status
-catalogue://q92_violations          → derived consistency check
+catalogue://violations/{rule}       → domain-extension consistency rule (parametric)
 catalogue://axes                    → axis list with break counts
 catalogue://lineages                → object lineage graph
 catalogue://wedge?a=...&b=...       → wedge-product audit between two sources
@@ -725,11 +739,11 @@ Prompts are slot-filled templates the client invokes; the server
 returns a fully-rendered prompt the LLM then acts on.
 
 ```text
-analyze_new_processor(spec_doc_url) →
+analyze_new_object(spec_doc_url) →
   "Examine the spec at <url>. For each section, identify:
-   - Existing breaks the processor inherits unchanged
+   - Existing breaks this object inherits unchanged
    - Refinements of existing breaks
-   - New breaks the processor forces (Q-series)
+   - New breaks this object forces
    For each break, provide a (partition, preservation-theorem) pair.
    Then propose ISA operations to record the analysis."
 
@@ -739,10 +753,10 @@ audit_md_vs_sql(md_path, sql_path) →
    other. Output a list of: (item, present_in_md, present_in_sql,
    suggested_action)."
 
-next_processor(domain) →
+next_object(domain) →
   "The catalogue's most recent additions are <last_3>. Suggest the
-   next processor to analyze, with reasoning: which existing break
-   would it confirm cross-vendor? what new break might it force?"
+   next object to analyze, with reasoning: which existing break
+   would it confirm? what new break might it force?"
 
 snap_to_grid_check(deliverable_description) →
   "Compare the catalogue's current entailment against
@@ -769,7 +783,7 @@ snap_to_grid_check(deliverable_description) →
                                │
               ┌────────────────┼────────────────┐
               ▼                ▼                ▼
-        symmetries.db    triple-store      Neo4j
+        catalogue.db     triple-store      Neo4j
         (SQLite,         (federated        (graph
         local)           catalogue)        analytics)
 ```
@@ -780,34 +794,34 @@ need to know which is in use.
 ### Example session
 
 ```text
-Client → Server: introduce_object(id="z16", kind=processor, year=2022,
-                                  lineage=["mainframe", "ibm"])
+Client → Server: introduce_object(id="omega", year=2022,
+                                  lineage=[("delta", "descended-from")])
 Server → Client: ok
 
-Client → Server: introduce_break(number="Q94", name="Vector facility",
+Client → Server: introduce_break(number="F-new", name="Some structural distinction",
                                  axes=["parallel"])
 Server → Client: ok
 
-Client → Server: witness("z16", "Q94", "first-witness",
-                         "Z architecture vector extension")
+Client → Server: witness("omega", "F-new", "first-witness",
+                         "first realised at omega")
 Server → Client: ok
 
-Client → Server: GET catalogue://breaks/Q94
+Client → Server: GET catalogue://breaks/F-new
 Server → Client: {
-                   "number": "Q94",
-                   "name": "Vector facility",
+                   "number": "F-new",
+                   "name": "Some structural distinction",
                    "axes": ["parallel"],
                    "status": "active",
-                   "originator": {"object": "z16", "year": 2022},
+                   "originator": {"object": "omega", "year": 2022},
                    "witnesses": [
-                     {"object": "z16", "kind": "first-witness", ...}
+                     {"object": "omega", "kind": "first-witness", ...}
                    ]
                  }
 
-Client → Server: invoke_prompt("next_processor", domain="mainframe")
+Client → Server: invoke_prompt("next_object", domain="my-domain")
 Server → Client: "<rendered prompt>"
 LLM → Client → Server: <calls introduce_object / witness / refine
-                       to record the next processor's analysis>
+                       to record the next object's analysis>
 ```
 
 The MCP interface makes the methodology *self-bootstrapping*: an LLM
@@ -817,15 +831,15 @@ catalogue's queryable substrate.
 
 ## Why this matters
 
-The processor catalogue grew to ~6800 lines of prose plus 1400 lines of
-SQL across many sessions. The structural content survived because it
-was externalised as breaks, witnesses, refinements — concrete artefacts
+A catalogue built with this methodology can grow over many sessions
+without losing structural content, because every distinction is
+externalised as a break, witness, or refinement — concrete artefacts
 that can be queried, audited, and extended.
 
-Generalising the methodology means: *any domain with accumulating
-structural distinctions can use the same scaffolding*. The cost is one
-schema-bootstrap and a handful of verbs; the payoff is a queryable
-catalogue that:
+The framework's value is that *any domain with accumulating
+structural distinctions can use the same scaffolding*. The cost is
+one schema-bootstrap and a handful of verbs; the payoff is a
+queryable catalogue that:
 
 - Doesn't lose structure across context boundaries
 - Makes drift explicit (wedge-product audits)
@@ -834,9 +848,9 @@ catalogue that:
   emerges from queries rather than from a special verb
 - Converges visibly when the metamodel closes
 
-The processor catalogue is one demonstration. The ISA + NOSQL schema is
-the methodology factored to the level where any structural-knowledge
-domain can adopt it.
+The methodology applies to any structural-knowledge domain — the
+ISA + NOSQL schema is factored to the point where the domain
+specifics live entirely in extensions.
 
 ## Philosophical lineage — Derridean traces and Yoneda relationality
 
@@ -856,33 +870,35 @@ meaning unilaterally; meaning is the trace of relationships.
 
 The methodology refuses presence at every level:
 
-- **No foundational break.** Z18 (microcode-as-data) isn't a privileged
-  origin from which other breaks are derived. It's named only because
-  the 6502 work surfaced it; it remains revisable as future objects
-  contribute traces that re-position it.
-- **No foundational origin.** The originator of Q89 isn't a fact
+- **No foundational break.** No break is a privileged origin from
+  which other breaks are derived. Each is named only because some
+  object's analysis surfaced it; each remains revisable as future
+  objects contribute traces that re-position it.
+- **No foundational origin.** The originator of a break isn't a fact
   stamped into the schema; it's a *derivation* (tropical MIN-year
-  over origin-class witness edges). Adding the System/360/67 trace
-  to a previously-80386-credited Q89 doesn't *correct* the catalogue —
-  it *re-derives* the originator. The earlier reading wasn't wrong;
-  it was what the trace-set licensed at the time.
-- **No foundational schema.** Schema breaks S0-S11 emerged additively;
-  none was specified in advance. The schema is itself a sediment of
-  traces — each break records that a particular structural concern
-  forced the data shape to admit a new column or table.
-- **No foundational object.** Specs and breaks are constituted by their
-  participation in the witness graph. The "68030" isn't an essence
-  outside the catalogue; it's the trace-set its witnesses, refinements,
-  and lineage edges accumulate to.
+  over origin-class witness edges). Adding an earlier object's
+  origin trace to a previously-attributed break doesn't *correct*
+  the catalogue — it *re-derives* the originator. The earlier
+  reading wasn't wrong; it was what the trace-set licensed at the
+  time.
+- **No foundational schema.** The framework's schema breaks S0-S11
+  emerged additively; none was specified in advance. The schema is
+  itself a sediment of traces — each break records that a
+  particular structural concern forced the data shape to admit a
+  new column or table.
+- **No foundational object.** Objects and breaks are constituted by
+  their participation in the witness graph. An object isn't an
+  essence outside the catalogue; it's the trace-set its witnesses,
+  refinements, and lineage edges accumulate to.
 
 The "retroactive attribution" pattern is the most acute Derridean
-moment: when System/360/67 (1965) becomes the origin of Q89 in 1985's
-catalogue analysis, the prior reading wasn't false — it was what the
-trace-set then licensed. The catalogue doesn't *correct* itself
-backwards; it *thickens* itself forward, and the derived originator
-is whatever the current trace-set licenses. There is no privileged
-moment of "the right answer"; there are only progressively richer
-trace-sets and the queries they license.
+moment: when an earlier object becomes the origin of a break in a
+later catalogue analysis, the prior reading wasn't false — it was
+what the trace-set then licensed. The catalogue doesn't *correct*
+itself backwards; it *thickens* itself forward, and the derived
+originator is whatever the current trace-set licenses. There is no
+privileged moment of "the right answer"; there are only
+progressively richer trace-sets and the queries they license.
 
 ### Yoneda-style relational stance
 
@@ -926,12 +942,12 @@ Derrida + Yoneda yields the methodology's working stance:
    and the metamodel itself are functions over the trace graph,
    re-derivable as the trace-set thickens.
 
-The processor catalogue is the working demonstration. A new
-processor doesn't update a privileged Spec record; it adds witnesses,
-refinements, and lineage edges that re-derive every dependent view.
-The wedge-product audit doesn't compare the catalogue to a master
-copy; it cross-checks two representations to surface drift, treating
-both as equally provisional.
+A working catalogue demonstrates the stance: a new object doesn't
+update a privileged Object record; it adds witnesses, refinements,
+and lineage edges that re-derive every dependent view. The wedge-
+product audit doesn't compare the catalogue to a master copy; it
+cross-checks two representations to surface drift, treating both as
+equally provisional.
 
 This isn't decorative philosophy. It's the structural reason the
 methodology survives context loss: *because no element is
@@ -940,30 +956,33 @@ substrate that preserves the hom-set preserves the methodology*.
 
 ## Open questions
 
-- **Schema interoperability across instances.** If two domains both use
-  this methodology (processors, languages), can they share schema breaks?
-  E.g., does Q89 (paging) in processors map to a similar break in
-  language runtimes (managed-heap layout)? The wedge-product audit
-  generalises to cross-domain comparison.
+- **Schema interoperability across instances.** If two domains both
+  use this methodology, can they share schema breaks? E.g., does
+  "paging" in a processor catalogue map to a similar break in a
+  language-runtime catalogue (managed-heap layout)? The
+  wedge-product audit generalises to cross-domain comparison.
 - **Federation.** Multiple catalogues maintained independently might
   share a common substrate. The triple-store representation is most
   natural for federation.
 - **Versioning.** The methodology is *additive* — but what about
-  corrections (e.g., Z80's reassignment from time-axis to EqualityMode)?
-  A `CONTRADICT` verb is a candidate but not yet adopted.
-- **Reasoning over the catalogue.** Once enough breaks accumulate, can
-  derivation rules infer new facts? E.g., "if X originates Q89 and Y
-  inherits from X, then Y inherits Q89." Datalog-style inference is a
-  natural fit.
+  corrections (e.g., reassigning a break from one axis to another
+  after later analysis)? A `CONTRADICT` verb is a candidate but
+  not yet adopted.
+- **Reasoning over the catalogue.** Once enough breaks accumulate,
+  can derivation rules infer new facts? E.g., "if X originates F1
+  and Y inherits from X, then Y inherits F1." Datalog-style
+  inference is a natural fit.
 
 These are real but downstream of the basic ISA. The current scope is:
-*formalise what we've been doing*, then build out from there.
+*formalise what good cataloguing already does*, then build out from
+there.
 
 ---
 
-This document and the artefacts it describes (`symmetries.md`,
-`symmetries.sql`) are themselves witnesses of the methodology. Each is
-a substrate (prose / relational SQL) for the same underlying graph.
-Other substrates (document, graph, triple store) would carry the same
-content. The methodology is the equivalence-class; the substrates are
-representatives.
+This document and the artefacts it describes (the package's `.md`
+files, `schema.sql`, the Python ISA implementation) are themselves
+witnesses of the methodology. Each is a substrate (prose, relational
+SQL, executable Python) for the same underlying graph. Other
+substrates (document, graph, triple store) would carry the same
+content. The methodology is the equivalence-class; the substrates
+are representatives.
