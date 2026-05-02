@@ -8,7 +8,7 @@ version = "0.1.0"
 description = "Symmetry-break cataloguing — ISA + SQLite schema + MCP server for accumulating named structural distinctions about a domain (Klein-four-equipped, self-hosting)"
 readme = "README.md"
 requires-python = ">=3.10"
-license = { text = "MIT" }
+license = { file = "LICENSE" }
 authors = [
     { name = "Mike Mol", email = "mikemol@gmail.com" },
 ]
@@ -50,8 +50,13 @@ Methodology = "https://github.com/mikemol/sixfiveohtwo/blob/main/v4cat/methodolo
 v4cat-mcp = "v4cat.mcp_server:main"
 
 [tool.setuptools]
-packages = ["v4cat", "v4cat.tests"]
 include-package-data = true
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-dir]
+"" = "src"
 
 [tool.setuptools.package-data]
 v4cat = ["*.sql", "*.md"]

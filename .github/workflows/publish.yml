@@ -1,0 +1,81 @@
+name: publish
+
+# Trusted Publishing (OIDC) — no API tokens required.
+#
+# One-time setup on the package-index side:
+#   * TestPyPI: https://test.pypi.org/manage/account/publishing/  →  Add a
+#     pending publisher for owner=<github-org>, repo=v4cat,
+#     workflow=publish.yml, environment=testpypi.
+#   * PyPI:    https://pypi.org/manage/account/publishing/        →  same
+#     pattern with environment=pypi.
+#
+# Triggers:
+#   * Tag push  vN.N.N-rcM   →  TestPyPI (release-candidate channel)
+#   * GitHub release published →  PyPI (final release)
+#   * workflow_dispatch       →  manual TestPyPI smoke test
+
+on:
+  push:
+    tags:
+      - 'v[0-9]+.[0-9]+.[0-9]+-rc[0-9]+'
+  release:
+    types: [published]
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: build distributions
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+          cache: pip
+      - name: Install build + twine
+        run: pip install --upgrade build twine
+      - name: Build sdist + wheel
+        run: python -m build
+      - name: twine check
+        run: twine check dist/*
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist/
+
+  publish-testpypi:
+    name: publish to TestPyPI
+    needs: build
+    if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    environment:
+      name: testpypi
+      url: https://test.pypi.org/p/v4cat
+    permissions:
+      id-token: write   # Trusted Publishing OIDC
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist/
+      - uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          repository-url: https://test.pypi.org/legacy/
+          skip-existing: true
+
+  publish-pypi:
+    name: publish to PyPI
+    needs: build
+    if: github.event_name == 'release'
+    runs-on: ubuntu-latest
+    environment:
+      name: pypi
+      url: https://pypi.org/p/v4cat
+    permissions:
+      id-token: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist/
+      - uses: pypa/gh-action-pypi-publish@release/v1

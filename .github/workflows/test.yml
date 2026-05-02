@@ -1,0 +1,71 @@
+name: test
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    name: py${{ matrix.python-version }} on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest]
+        python-version: ['3.10', '3.11', '3.12', '3.13']
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: pip
+
+      - name: Install package + dev deps
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[dev]" coverage
+
+      - name: Run all five test suites
+        run: |
+          python -m v4cat.tests.test_isa
+          python -m v4cat.tests.test_mcp
+          python -m v4cat.tests.test_sandbox
+          python -m v4cat.tests.test_self_hosting
+          python -m v4cat.tests.test_branch_coverage
+
+      - name: Branch-coverage gate (100% required)
+        run: |
+          coverage erase
+          for t in test_isa test_mcp test_sandbox test_self_hosting test_branch_coverage; do
+            coverage run --branch --source=v4cat --omit='*/tests/*' --append -m v4cat.tests.$t
+          done
+          coverage report --skip-empty --fail-under=100
+
+  build:
+    name: build sdist + wheel
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+          cache: pip
+      - name: Install build
+        run: pip install --upgrade build
+      - name: Build distributions
+        run: python -m build
+      - name: Inspect built artefacts
+        run: |
+          ls -la dist/
+          python -m pip install --upgrade twine
+          twine check dist/*
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist/
+          retention-days: 7
