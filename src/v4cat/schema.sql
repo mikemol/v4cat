@@ -149,15 +149,35 @@ CREATE TABLE IF NOT EXISTS break_axes (
 );
 
 -- -----------------------------------------------------------------------------
--- S7: tensions — structural concerns about implementation alignment
+-- S7: tensions — named kquery shapes (formerly: structural concerns)
+--
+-- Tensions reframe (S12, 2026-05-03): a tension is a *named curry-spec
+-- AST over kquery* with a disposition axis (concern / utility /
+-- diagnostic / audit). The original 'concerns' framing is preserved
+-- as the 'concern' disposition; utility-disposition tensions catalogue
+-- the framework's own derived views (break_origin, break_first_seen,
+-- break_status). See cotype/shadow_risc_core.md for the formal framing
+-- and cotype/shadow_migration_01_schema_seed.md for this schema delta.
+--
+-- Columns added in S12:
+--   * disposition      — concern / utility / diagnostic / audit
+--   * parameters_json  — JSON list of free Param names bound at eval
+--   * shape_json       — JSON-serialised KqueryNode AST
+-- Existing rows default to disposition='concern' to preserve their
+-- prior framing; parameters_json and shape_json default to NULL.
 -- -----------------------------------------------------------------------------
 
 CREATE TABLE IF NOT EXISTS tensions (
-    id              TEXT PRIMARY KEY,
-    name            TEXT NOT NULL,
-    description     TEXT,
-    status          TEXT,
-    addressing_stage TEXT
+    id               TEXT PRIMARY KEY,
+    name             TEXT NOT NULL,
+    description      TEXT,
+    status           TEXT,
+    addressing_stage TEXT,
+    disposition      TEXT
+        DEFAULT 'concern'
+        CHECK (disposition IN ('concern','utility','diagnostic','audit')),
+    parameters_json  TEXT,
+    shape_json       TEXT
 );
 
 CREATE TABLE IF NOT EXISTS tension_breaks (
