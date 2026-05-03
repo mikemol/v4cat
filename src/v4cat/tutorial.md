@@ -1,5 +1,9 @@
 # Tutorial — a walk-through of the symmetry-break catalogue
 
+> *Grade: hands-on walk-through (D₂).
+> Shallower: [README.md](../../README.md) (quick-start). Deeper: [methodology.md](methodology.md) (operational design), [theory.md](theory.md) (foundations).
+> Architectural detail: [cotype/](../../cotype/).*
+
 This file is written for an LLM (or human) who's encountering the
 catalogue framework for the first time, perhaps via the MCP server.
 It walks through the methodology by *doing it* on a small synthetic
@@ -15,7 +19,7 @@ quick-start.
 ## Contents
 
 1. [What this framework is for](#1-what-this-framework-is-for)
-2. [The seven verbs and one classifier](#2-the-seven-verbs-and-one-classifier)
+2. [Three RISC primitives + named conveniences](#2-three-risc-primitives--named-conveniences)
 3. [Starting from empty](#3-starting-from-empty)
 4. [Adding the first object and break](#4-adding-the-first-object-and-break)
 5. [Witnessing](#5-witnessing)
@@ -27,6 +31,7 @@ quick-start.
 11. [Detecting drift via wedge audits](#11-detecting-drift-via-wedge-audits)
 12. [A small worked example](#12-a-small-worked-example)
 13. [What to do next](#13-what-to-do-next)
+14. [Using the RISC primitives directly](#14-using-the-risc-primitives-directly)
 
 ---
 
@@ -80,30 +85,54 @@ catalogue derives global structure (originator, status, lineage
 inheritance, drift) automatically and re-derivably as you add
 more.
 
-## 2. The seven verbs and one classifier
+## 2. Three RISC primitives + named conveniences
 
-The framework's ISA is small. Seven mutation verbs:
+The framework's ISA is small. The structural core is **three
+RISC primitives** — every other verb is documented sugar that
+reduces to these three. The strengthened closure check
+(`theory.md` § 14.5.8) verifies the reductions on every
+catalogue open.
 
-| Verb                                      | Purpose                                              |
-| ----------------------------------------- | ---------------------------------------------------- |
-| `INTRODUCE`                               | Add a new object (break / spec / tension)            |
-| `WITNESS`                                 | Record a typed edge from a spec to a break           |
-| `REFINE`                                  | Annotate a (break, spec) edge with a named attribute |
-| `DEFER`                                   | Mark a break as a deferred candidate                 |
-| `PROMOTE`                                 | Promote a deferred break to active                   |
-| `BOUNDARY`                                | Mark a break as a deliberate metamodel non-extension |
-| `KIND.NEW` / `PREDICATE.NEW` / `AXIS.NEW` | Schema-evolution helpers (rare)                      |
+### RISC core (3 verbs)
 
-And one read classifier:
+| Verb             | Purpose                                                      |
+| ---------------- | ------------------------------------------------------------ |
+| `INTRODUCE_NODE` | Add a node of a catalogued type (break / spec / tension / …) |
+| `EDGE`           | Record a typed edge in the witness or lineage graph          |
+| `KQUERY`         | Klein-four read classifier — the universal read primitive    |
 
-| Verb     | Purpose                                                 |
-| -------- | ------------------------------------------------------- |
-| `KQUERY` | Klein-four classifier (every read decomposes into this) |
+`KQUERY` classifies a universe `U` of items by their `(in A, in B)`
+membership signature, returning four cells: `11`, `10`, `01`,
+`00`. Every conventional read (filter, intersect, diff, coverage)
+is a named selection from these four cells. Each cell of the
+output is itself a referent — kquery's output type embeds in its
+input type, which makes the algebra fixpoint-closed (the
+mechanism behind the curry-spec algebra for tensions). Section 9
+walks through it.
 
-KQUERY classifies a universe `U` of items by their `(in A, in B)`
-membership signature, returning four cells: `11`, `10`, `01`, `00`.
-Every conventional read (filter, intersect, diff, coverage) is a
-named selection from these four cells. Section 9 walks through it.
+### CISC sugar — named conveniences
+
+The verbs below are documented sugar with published reductions to
+the RISC core. They preserve the call-signature ergonomics
+catalogue authors expect; internally each delegates to the RISC
+primitives.
+
+| Verb                                      | Reduction                                             | Purpose                                              |
+| ----------------------------------------- | ----------------------------------------------------- | ---------------------------------------------------- |
+| `INTRODUCE`                               | `INTRODUCE_NODE` (+ `EDGE` for lineage)               | Add a new node (break / spec / tension)              |
+| `WITNESS`                                 | `EDGE` (target-type=`break`)                          | Record a typed edge from a spec to a break           |
+| `LINEAGE_WITNESS`                         | `EDGE` (target-type=`spec`)                           | Record a lineage edge between specs                  |
+| `REFINE`                                  | `INTRODUCE_NODE` + `EDGE` (origin) + `EDGE` (refines) | Introduce a child break + spec's contribution to it  |
+| `DEFER`                                   | `WITNESS` (kind=`deferred-candidate`)                 | Mark a break as a deferred candidate                 |
+| `PROMOTE`                                 | `WITNESS` (kind=`confirms`)                           | Promote a deferred break to active                   |
+| `BOUNDARY`                                | `WITNESS` (kind=`sibling-boundary`)                   | Mark a break as a deliberate metamodel non-extension |
+| `KIND.NEW` / `PREDICATE.NEW` / `AXIS.NEW` | substrate-coupled                                     | Schema-evolution helpers (rare)                      |
+
+The walkthrough below (§§ 3–13) uses the CISC verbs throughout
+because they're ergonomic for typical cataloguing work. § 14
+shows the same operations using RISC primitives directly, for
+readers who prefer the smaller surface or need direct access to
+the type-system seed.
 
 ## 3. Starting from empty
 
@@ -797,6 +826,126 @@ follow-ups:
 The framework's value compounds the more you put into it. A
 catalogue with 5 objects is informative; with 50 it surfaces
 patterns; with 500 it converges into a metamodel for the domain.
+
+## 14. Using the RISC primitives directly
+
+§§ 3–13 walked the CISC sugar — the ergonomic verbs catalogue
+authors typically reach for. This section turns the walkthrough
+inside-out: the same operations expressed via the three RISC
+primitives announced in § 2. Read this when you want the smaller
+surface, when you're introducing a new node-type or edge-kind a
+domain extension hasn't predefined, or when you want to construct
+and evaluate a tension dynamically.
+
+### 14.1 Side-by-side: CISC sugar and RISC primitives
+
+The §1 walkthrough's `cat.introduce_break('F1', 'First break',
+short_desc='...')` is equivalent to:
+
+```
+cat.introduce_node('F1', 'First break', type='break',
+                   attrs={'short_desc': '...'})
+```
+
+`cat.introduce_object('alpha', 'Alpha', year=2000)` is
+equivalent to:
+
+```
+cat.introduce_node('alpha', 'Alpha', type='spec',
+                   attrs={'year': 2000})
+```
+
+`cat.witness('alpha', 'F1', 'origin')` is equivalent to:
+
+```
+cat.edge('alpha', 'F1', 'origin')
+```
+
+`cat.refine('F1', 'alpha', 'foo-extension', description='bar')`
+expands to a three-call composition:
+
+```
+cat.introduce_node('foo-extension', 'foo-extension', type='break',
+                   attrs={'short_desc': 'bar'})
+cat.edge('alpha', 'foo-extension', 'origin')
+cat.edge('alpha', 'F1', 'refines')
+```
+
+— which is what `refine()` does internally. The refinement-name
+becomes a first-class child break with its own origin witness;
+the parent break gets a `refines` witness from the same spec.
+
+### 14.2 Validation semantics
+
+`introduce_node` validates that `type` is a catalogued node-type
+and that `attrs` cover the type's required-attribute schema. The
+validation reads the type-system seed via SQL; if you open a
+catalogue with `check_self_hosting=False` (no seed loaded),
+`introduce_node` raises `RuntimeError`. The CISC verbs
+(`introduce_break` etc.) fall back to legacy direct INSERTs in
+that case.
+
+`edge` validates that `kind` is a catalogued edge-kind and reads
+its declared `target-type` (via `spec_attributes`) to dispatch
+to the witnesses table (target-type='break') or lineages table
+(target-type='spec'). Same seed-required precondition.
+
+### 14.3 Tensions as named curry-spec ASTs
+
+The (β) reframe also widens what a tension *is*. A tension is
+now a **named curry-spec AST over kquery** — parametric over
+free `Param` slots, evaluable against the witness graph. The
+AST language lives in `v4cat.curry`:
+
+```
+from v4cat.curry import (
+    Tension, KqueryNode, EdgeReferent, AxisCutReferent, Param,
+)
+
+t = Tension(
+    id='Q-break-origin',
+    name='Originator',
+    description='Earliest origin-class witness on B',
+    disposition='utility',
+    parameters=('B', 'axis_column', 't'),
+    shape=KqueryNode(
+        a=EdgeReferent(
+            pivot=Param('B'),
+            kinds=('origin', 'catalogue-introduces'),
+            pivot_role='target', return_role='source',
+        ),
+        b=AxisCutReferent(
+            axis_column=Param('axis_column'),
+            op='<=', threshold=Param('t'),
+        ),
+    ),
+)
+cells = cat.evaluate_tension(t, B='F1', axis_column='year', t=1985)
+# cells: {'00':[...], '01':[...], '10':[...], '11':[...]}
+```
+
+The disposition axis (`concern` / `utility` / `diagnostic` /
+`audit`) records how the tension is read. The legacy
+`introduce_tension(...)` calls land as `concern`-disposition by
+default; new tensions can declare any disposition.
+
+### 14.4 Why use RISC directly?
+
+Most users should stay with the CISC walkthrough — it's
+ergonomic and matches the documented witness vocabulary. The
+RISC primitives are useful when:
+
+- You want to introduce a new node-type or edge-kind that a
+  domain extension hasn't predefined.
+- You want to construct and evaluate a tension dynamically
+  (e.g., for diagnostic queries that compute their own AST).
+- You want minimal surface to audit (understanding what the
+  framework's *primitive* moves are vs. what's sugar).
+
+For deeper architectural detail, see
+`cotype/shadow_risc_core.md`. The RISC discipline check that
+runs at every `check_self_hosting=True` open lives in
+`bootstrap.check_risc_discipline()`.
 
 ---
 

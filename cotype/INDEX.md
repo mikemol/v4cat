@@ -61,6 +61,166 @@ of v4cat to v4cat.
   Code is fully de-biased; surface docs (README) updated;
   methodology/theory/tutorial deferred for a follow-up pass.
 
+## Doc-discipline analysis (2026-05-03 fire)
+
+- [shadow_doc_discipline.md](shadow_doc_discipline.md) —
+  DBE output: criteria for clean / clear / elegant docs.
+  Costructure (graded-narrative-doc), composition (depth-graded
+  ladder threading), entailment (G1–G5 + threading rules ⟹
+  clean ∧ clear ∧ elegant). Reusable for future doc-set audits.
+- [rfs_findings_doc_discipline.md](rfs_findings_doc_discipline.md)
+  — RFS findings: 9 violations of the discipline criteria across
+  the 5 user-facing docs, classified into 3 severity groups.
+  Group A (HIGH): Shape-1 appendage style at 3 docs + dual
+  narrative on tensions. Group B (MEDIUM): README missing (β),
+  cotype invisible from shallow grades, no grade signposting.
+  Group C (LOW): minor terminology drift. Recomposition
+  feasibility verified across 6 external commitments.
+- [snap_report_doc_discipline.md](snap_report_doc_discipline.md)
+  — S2G snap on the doc-discipline analysis. 6 inter-shadow
+  quotients including the **deep additive-monoid quotient**:
+  the doc-cleanup recomposition has the same shape as the
+  code migration plan (5 ordered additive operations
+  preserving external commitments). The framework's
+  additive-monoid composition discipline is substrate-
+  independent.
+- [shadow_doc_cleanup_plan.md](shadow_doc_cleanup_plan.md) —
+  ordered additive composition of 6 doc-cleanup steps realising
+  shadow_doc_discipline.md's criteria; structural analogue of
+  shadow_migration_plan.md (per the deep quotient). Dependency
+  partial order: D₁ (theory) → D₂ (methodology) → D₃ (tutorial)
+  → D₄ (README); D₅ (examples) depends on D₂; D₆ (signposting)
+  depends on D₁–D₅. Each prefix is a valid resting state.
+
+### Doc-cleanup step shadows (per-step DBE outputs — all complete)
+
+- [shadow_doc_cleanup_01_theory_integration.md](shadow_doc_cleanup_01_theory_integration.md)
+  — **D₁ COMPLETE.** § 14.9 absorbed into § 14.5 as new § 14.5.8;
+  strengthened Theorem 14.5 is now the canonical statement.
+- [shadow_doc_cleanup_02_methodology_reframe.md](shadow_doc_cleanup_02_methodology_reframe.md)
+  — **D₂ COMPLETE.** Headline list items 4 + 6 reframed; ISA
+  section restructured (RISC primitives lead, CISC documented as
+  sugar with reductions); modal verbs labelled as orbit-elements
+  of WITNESS; trailing (β) appendage deleted.
+- [shadow_doc_cleanup_03_tutorial_reorder.md](shadow_doc_cleanup_03_tutorial_reorder.md)
+  — **D₃ COMPLETE.** § 2 reframed to "Three RISC primitives + named
+  conveniences"; § 14 retained but reframed from appendage to
+  natural deep section; TOC updated; tables aligned.
+- [shadow_doc_cleanup_04_readme_overview.md](shadow_doc_cleanup_04_readme_overview.md)
+  — **D₄ COMPLETE.** First paragraph leads with RISC core +
+  closure-check reference; cotype/ surfaced as architectural
+  source-of-truth; Documentation list gains cotype/ entry.
+- [shadow_doc_cleanup_05_examples_minor.md](shadow_doc_cleanup_05_examples_minor.md)
+  — **D₅ COMPLETE.** Top blockquote reframed; date marker removed;
+  cross-refs updated to post-D₃ tutorial § 14.
+- [shadow_doc_cleanup_06_signposting.md](shadow_doc_cleanup_06_signposting.md)
+  — **D₆ COMPLETE — DOC-CLEANUP FULLY REALISED.** 3-line grade
+  preamble added to all 5 user-facing docs; depth-graded ladder
+  is now signposted in the surface; cotype/ reachable from
+  every grade.
+
+  **All six doc-cleanup steps complete. The doc-set satisfies
+  G1–G5 of shadow_doc_discipline.md; no "added 2026-05-03"
+  markers remain in user-facing docs (their content absorbed
+  into canonical narratives; migration history preserved in
+  cotype/); 189/189 tests green; closure check passes.**
+
+## Forward shadows (architectural commitments not yet realised)
+
+- [shadow_risc_core.md](shadow_risc_core.md) — RISC compression
+  to 3 verbs (`introduce_node`, `edge`, `kquery`) with
+  self-hosted type system; tensions as named curry-spec ASTs
+  over kquery; CISC reduction table for every existing verb;
+  Theorem 14.5 strengthening to closure-plus-self-coherence.
+  Captures the architecture; migration is staged and additive.
+- [shadow_migration_plan.md](shadow_migration_plan.md) — ordered
+  additive composition of 5 step-shadows realising
+  shadow_risc_core; each step is an orbit-element of the
+  project's existing additive-move discipline (anti-pattern +
+  Theorem 14.5), no new abstraction needed; partial-order
+  dependency `S₁ → S₂ → S₃ → S₄`, S₅ parallel-or-after.
+
+### Step shadows (per-step DBE outputs, generated as steps begin)
+
+- [shadow_migration_01_schema_seed.md](shadow_migration_01_schema_seed.md)
+  — **S₁ COMPLETE.** `tensions` schema gained `disposition` /
+  `parameters_json` / `shape_json` columns; `framework_seed.sql`
+  gained the type-system seed (5 node-type tokens, 17 edge-kind
+  tokens, 10 attribute-schema breaks, type-relation
+  `spec_attributes`, `requires-attr`/`admits-attr` witness edges).
+  All 169 tests pass; closure check unchanged (new rows fall
+  outside the (impl_ids, cat_ids) sets).
+- [shadow_migration_02_risc_dispatch.md](shadow_migration_02_risc_dispatch.md)
+  — **S₂ COMPLETE.** New module `src/v4cat/curry.py` (curry-spec
+  AST + evaluator). New methods on `SymmetryCatalogue`:
+  `introduce_node`, `edge`, `evaluate_tension`. Validation reads
+  the S₁ seed via SQL; `kind`'s target-type catalogues to
+  witnesses/lineages dispatch; type/attr-schema enforcement
+  active. 15 new RISC tests pass; full suite **184/184 green**.
+- [shadow_migration_03_cisc_redirect.md](shadow_migration_03_cisc_redirect.md)
+  — **S₃ COMPLETE.** Every CISC verb's body redirected to RISC
+  primitives when the type-system seed is loaded; legacy
+  direct-INSERT path retained as fallback for
+  `check_self_hosting=False`. `lineage_witness` surfaces as new
+  public sugar; `defer`/`promote`/`boundary` inherit the
+  redirect through `witness` (orbit-elements per discipline rule
+  6, no code change). `refine` decomposed to RISC composition
+  (`introduce_node` + `edge` × 2) with `refinements` table
+  dual-writing for backwards compat. The (β) semantic — that
+  refinement-names are first-class breaks — is now realised in
+  the witness graph; one legacy test (`test_top_originators`)
+  updated to reflect that beta originates F2 + foo-extension +
+  baz-extension under (β). Full suite **184/184 green**.
+- [shadow_migration_04_signature_reclassify.md](shadow_migration_04_signature_reclassify.md)
+  — **S₄ COMPLETE.** `Cell` gained `derives_from`; SIGNATURE
+  now distinguishes 3 RISC primitives (`introduce_node`, `edge`,
+  `kquery`) from 11 CISC sugar cells with explicit reduction
+  chains. New SIGNATURE cells (`introduce_node`, `edge`,
+  `lineage_witness`) and matching CAT entries in
+  `framework_seed.sql` keep IMPL ↔ CAT gap empty. Closure check
+  strengthened with `check_risc_discipline()` — verifies every
+  `derives_from` chain terminates in RISC cells (raises
+  `RiscDisciplineViolation` for dangling refs or cycles).
+  Theorem 14.5 now closes over the smaller {RISC} primitive set
+  with the discipline-coherence invariant as additional
+  predicate — a stronger claim than the pre-S₄ closure. 5 new
+  RISC discipline tests; full suite **189/189 green**.
+- [shadow_migration_05_doc_pass.md](shadow_migration_05_doc_pass.md)
+  — **S₅ COMPLETE — MIGRATION FULLY REALISED.** Doc pass adds
+  (β) reframe sections to all four core docs: methodology.md
+  ("(β) RISC reframe" — primitive table, disposition spectrum,
+  refinements-as-breaks, schema-witness vocabulary, strengthened
+  closure), theory.md (§ 14.9 "(β) RISC strengthening of
+  Theorem 14.5"), tutorial.md (§ 14 "Using the RISC primitives
+  directly" with RISC equivalents for §§ 1–13), examples.md
+  (brief (β) note + cross-references). Existing prose unchanged
+  — additive doc discipline. 189/189 tests still green.
+
+  **All five migration steps complete. The (β) RISC reframe
+  documented in shadow_risc_core.md is fully realised in code,
+  schema, seed, signature, closure check, and docs.**
+
+## Findings (RFS fire, 2026-05-03)
+
+- [rfs_findings_risc_projection.md](rfs_findings_risc_projection.md)
+  — sideways read mapping every existing-code candidate to its
+  shadow position. 10 findings: 4 RFS extractions
+  (`introduce_node`, `edge`, `refine`-rewrite, `Tension`), 3
+  orbit-S2G cataloguings (`defer/promote/boundary`,
+  `tropical_min/_max`, `origin/first_seen/retroactive_gap`), 3
+  already-aligned/additive (`kquery`, MCP wrappers, `Cell`
+  field). Recomposition feasibility verified across all 7
+  external commitments.
+
+## Shadows + classifications (S2G fire, 2026-05-03)
+
+- [snap_report_risc_projection.md](snap_report_risc_projection.md)
+  — snap-to-grid check against the 2026-05-03 user request to
+  apply the four skills. Snap occurred; cotype's entailment
+  consistent with the request and slightly more informative
+  (5 inter-shadow quotients identified that connect the new
+  architecture to the existing shadow library).
+
 ## Composition
 
 The shadows compose under **Theorem 14.5's preservation theorem**:

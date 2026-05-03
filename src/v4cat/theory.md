@@ -1,5 +1,9 @@
 # Theory — the foundations underneath the methodology
 
+> *Grade: foundations (D₄ — the deep end).
+> Shallower: [methodology.md](methodology.md) (operational design), [tutorial.md](tutorial.md), [README.md](../../README.md).
+> Architectural detail: [cotype/](../../cotype/) — the project's shadow library, the authoritative source for migration history and architectural commitments.*
+
 `methodology.md` describes *what the framework does*: the ISA, the
 schema, the Klein-four read primitive, the MCP interface. This file
 describes *why it has the shape it does* — the theoretical lineages
@@ -1641,10 +1645,79 @@ regression test for Theorem 14.5 itself.
 The first run of step (14.5.4) on the existing codebase will
 fail loudly. The failure message is the to-do list. The work to
 reach a passing check is the work of cataloguing the framework's
-own primitives — at minimum `Q-kfour`, `Q-witness`, `Q-refine`,
-`Q-schema-extend`, `Q-introduce-break`, `Q-introduce-object`,
-`Q-lineage`, plus `Q-bootstrap-closure` and `Q-supported-claims`
-themselves — each with witnesses and a preservation theorem.
+own primitives — at minimum the **RISC core** (`Q-introduce_node`,
+`Q-edge`, `Q-kquery`), the framework-canonical CISC sugar
+(`Q-introduce_break`, `Q-introduce_object`, `Q-introduce_tension`,
+`Q-witness`, `Q-lineage_witness`, `Q-refine`, `Q-defer`,
+`Q-promote`, `Q-boundary`), the read-orbit cells (`Q-tropical_min`,
+`Q-tropical_max`), the substrate cell (`Q-load_extension`), the
+self-check cell (`Q-check_closure`), and the bootstrap breaks
+(`Q-supported-claims`, `Q-bootstrap-closure`) themselves — each
+with witnesses and a preservation theorem. The RISC vs CISC
+distinction (subsection 14.5.8) makes which cells are *primitive*
+vs *derived* visible by inspection.
+
+**14.5.8.** *RISC discipline (β-strengthening).* `Cell` carries a
+`derives_from: Optional[tuple[str, ...]]` field. RISC cells
+declare `derives_from=None` (irreducible at the framework level);
+CISC and derived cells declare a tuple of `SIGNATURE` cell ids
+forming their reduction chain. Chains may pass through
+intermediate CISC cells (e.g., `defer.derives_from = ('witness',)`
+and `witness.derives_from = ('edge',)`) but must terminate in
+RISC.
+
+`bootstrap.check_closure(cat)` runs two verifications in sequence:
+
+1. **RISC discipline** — `check_risc_discipline()` walks every
+   SIGNATURE cell's `derives_from` chain. For each cell with
+   `derives_from is not None`, the chain must reference cells
+   present in SIGNATURE (no dangling refs) and terminate in cells
+   with `derives_from is None` (no cycles). Violation raises
+   `RiscDisciplineViolation` with `dangling: list[(cell_id,
+   missing_ref)]` and `cyclic: list[cell_id]` payload — the
+   analogue of Corollary 14.5.1's `(implicit, promissory)` payload
+   at the discipline level.
+
+2. **IMPL ↔ CAT** — the original Theorem 14.5 closure-kquery's
+   gap is empty; raises `SelfHostingViolation` if `gap.10` or
+   `gap.01` is non-empty.
+
+The RISC discipline check is substrate-independent (operates only
+on `SIGNATURE` Python data); the IMPL ↔ CAT check is
+substrate-coupled.
+
+The strengthened theorem statement supersedes the pre-strengthening
+form. The pre-strengthening form
+
+```
+∀c ∈ scope. (IMPL(c) ↔ CAT(c))   ⟹   gap = ∅
+```
+
+becomes the canonical statement:
+
+```
+∀c ∈ scope. (IMPL(c) ↔ CAT(c))                          (closure)
+  ∧ ∀c. derives_from(c) = ∅
+       ∨ derives_from(c) ⊆ SIGNATURE.ids                 (no dangling)
+  ∧ ∀c. closure(derives_from-chain from c) terminates    (terminates
+        in cells with derives_from = ∅                    in RISC)
+  ⟹   gap = ∅  ∧  the framework is RISC-disciplined
+```
+
+Closure over a smaller primitive set
+(`{introduce_node, edge, kquery}` in the strict reading) plus
+self-coherence of the reduction structure is a strictly stronger
+claim than the pre-strengthening form. The closure-relevant
+primitive set in `theory.py:SIGNATURE` is now visible by
+inspection: cells with `derives_from=None` and `kind ∈ {O, W, K}`
+for the three RISC primitives, plus the meta-cells
+(`load_extension`, `check_closure`) and bootstrap breaks
+(`Q-supported-claims`, `Q-bootstrap-closure`). All other
+SIGNATURE cells declare a `derives_from` tuple.
+See `cotype/shadow_risc_core.md` for the architectural framing
+and `cotype/shadow_migration_04_signature_reclassify.md` for the
+full classification; `tests/test_risc.py` carries the regression
+tests verifying the discipline holds.
 
 ### 14.6 Counterexamples and boundaries
 

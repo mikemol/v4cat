@@ -1,5 +1,9 @@
 # Symmetry-Break Cataloguing — a generic methodology with a small ISA
 
+> *Grade: operational design (D₃).
+> Shallower: [README.md](../../README.md) (quick-start), [tutorial.md](tutorial.md) (worked walk-through). Deeper: [theory.md](theory.md) (foundations).
+> Architectural detail: [cotype/](../../cotype/) — see [shadow_risc_core.md](../../cotype/shadow_risc_core.md) for the (β) RISC reframe.*
+
 This methodology catalogues a domain by accumulating *symmetry breaks*
 — named structural distinctions — with witnesses, refinements, and
 wedge-product audits. Time and lineage are themselves breaks-on-
@@ -19,12 +23,22 @@ is domain-agnostic; this document spells out the design.
 3. **Witnesses**: per-(object, break) edges with contribution kinds
    (`origin`, `confirms`, `refines`, ...). Generic: typed edges in a
    bipartite graph.
-4. **Refinements**: per-edge named attribute additions. Generic: named
-   annotations on edges.
+4. **Refinements**: child breaks introduced by a witness object's
+   contribution to a parent break — first-class structural
+   distinctions, not merely edge annotations. Generic: derivable
+   from the witness graph as origin-witnessed children of
+   refines-witnessed parents. (A legacy `refinements` table
+   continues to act as a cache for backwards-compatible reads.)
 5. **Axes**: meta-classification (Spatial/Temporal/Parallel/...). Generic:
    tags on breaks.
-6. **Tensions**: structural concerns about implementation alignment.
-   Generic: triples (concern, breaks-involved, status).
+6. **Tensions**: named kquery shapes (curry-spec ASTs) over the
+   witness graph, with a disposition axis (`concern` / `utility` /
+   `diagnostic` / `audit`). Concern-disposition tensions are the
+   "structural concerns about implementation alignment" framing;
+   utility-disposition tensions are catalogued framework views like
+   originator-attribution; diagnostic and audit dispositions name
+   detector and verification reads. Generic: parameterised
+   four-cell reads given names.
 7. **Metric fields and lineage as breaks-themselves**: the
    catalogue's "originator" attribution and inheritance relation
    aren't special verbs *applied to* the graph; they're symmetry
@@ -360,52 +374,50 @@ Everything else is sugar.
 ## The ISA
 
 A small, orthogonal set of operations that compose to build up the
-catalogue. Each has clear semantics; each is implementable against
-any of the four data-shape options.
+catalogue. The structural core is **three RISC primitives**;
+everything else in the ISA is documented sugar reducible to those
+three. Each is implementable against any of the four data-shape
+options.
 
-### Core verbs (foundational)
+### RISC primitives — the structural core (3 verbs)
 
-#### `INTRODUCE <kind> <id> [attrs]`
+#### `INTRODUCE_NODE <id> <name> <type> [attrs]`
 
-Add a new object of a given kind. Kinds: `break`, `object`, `axis`,
-`tension` (and any user-defined). Idempotent on `id`. The `year` and
-`lineage` attributes on `object` are first-class — they're how time
-and lineage enter the graph.
-
-```text
-INTRODUCE break  F1    name="Some structural distinction" axes=[spatial]
-INTRODUCE object beta  year=1985 lineage=[some-family]
-INTRODUCE object alpha year=1965 lineage=[earlier-family]
-```
-
-#### `WITNESS <subject> <break> <kind> [notes]`
-
-Record a contribution edge. Kinds form the methodology's vocabulary:
-`origin`, `catalogue-introduces`, `confirms`, `refines`,
-`first-witness`, `precedes`, `cross-vendor`, `inherits`,
-`deferred-candidate`, `sibling-boundary`, `gates-with-fault`.
+The universal node-introduction primitive. Dispatches over the
+catalogued node-type to land the new node in the appropriate
+substrate region (`break`, `spec`, `tension`, or any
+domain-introduced type). Validates that `type` is catalogued
+and that `attrs` covers the type's required attribute schema.
 
 ```text
-WITNESS alpha F1 origin
-WITNESS beta  F1 catalogue-introduces
-WITNESS beta  F1 origin
-WITNESS gamma F1 cross-vendor "an alternate realisation of F1"
+INTRODUCE_NODE F1    "Some structural distinction" break attrs={short_desc=...}
+INTRODUCE_NODE alpha "Alpha" spec attrs={year=1965}
+INTRODUCE_NODE T1    "Coupling concern" tension attrs={disposition=concern,...}
 ```
 
-The originator emerges from the witness graph plus the year attribute:
-`MIN(s.year)` over `origin` and `catalogue-introduces` edges. With
-both alpha (1965) and beta (1985) carrying `origin` edges to F1, the
-originator is alpha — derived, not declared.
+#### `EDGE <src> <tgt> <kind> [notes]`
 
-#### `REFINE <break> <object> <name> [description]`
-
-Annotate a (break, object) edge with a named refinement. Multiple
-refinements per edge admitted.
+The universal typed-edge primitive. Reads the catalogued
+edge-kind's source-type and target-type to dispatch to the
+witnesses or lineages substrate. Edge-kinds form the
+methodology's vocabulary: `origin`, `catalogue-introduces`,
+`confirms`, `refines`, `first-witness`, `precedes`,
+`cross-vendor`, `inherits`, `deferred-candidate`,
+`sibling-boundary`, `gates-with-fault`, `descended-from`,
+`inherits-from`, `family-member`, plus the schema-witness kinds
+`requires-attr`, `admits-attr`, `K-SOURCE-TYPE`, `K-TARGET-TYPE`.
 
 ```text
-REFINE F1 delta variant-a "first refinement of F1 at delta"
-REFINE F1 delta variant-b "second refinement of F1 at delta"
+EDGE alpha F1 origin
+EDGE beta  F1 catalogue-introduces
+EDGE beta  alpha descended-from
+EDGE gamma F1 cross-vendor "an alternate realisation of F1"
 ```
+
+The originator emerges from the witness graph plus the year
+attribute: `MIN(s.year)` over `origin` and `catalogue-introduces`
+edges. With both alpha (1965) and beta (1985) carrying `origin`
+edges to F1, the originator is alpha — derived, not declared.
 
 #### `KQUERY <left> <right>; <universe> <equivalence> <emit>`
 
@@ -413,7 +425,11 @@ The Klein-four read primitive — the *only* primitive read.
 
 Compares two referents (sets, views, sources, rules, projections,
 closures, snapshots, expected covers — any predicate over the
-universe) and returns the four-cell membership partition.
+universe) and returns the four-cell membership partition. The
+output is itself a 4-tuple of referents, each of which can re-enter
+KQUERY's input slot — the algebra is fixpoint-closed, which is
+what licenses the **curry-spec algebra** for tensions (named
+kquery shapes parameterised over free variables).
 
 ```text
 KQUERY prose_breaks structured_breaks emit=10,01
@@ -443,7 +459,74 @@ COVERAGE(A,B)   := KQUERY A B emit=10,01,11
 BLIND(A,B,U)    := KQUERY A B emit=00 universe=U
 ```
 
-### Modal verbs (lifecycle)
+### CISC sugar — named conveniences
+
+The verbs below are documented sugar with published reductions to
+the RISC primitives above. Each pairs a call-signature ergonomic
+for catalogue authors with a precise reduction to RISC. The
+reductions are recorded as `derives_from` chains in
+`theory.py:SIGNATURE`; the strengthened closure check (theory.md
+§ 14.5.8) verifies every chain terminates in RISC at every
+catalogue open.
+
+#### `INTRODUCE <kind> <id> [attrs]`     *(reduces to `INTRODUCE_NODE`)*
+
+Add a new object of a given kind. Kinds: `break`, `object`, `axis`,
+`tension` (and any user-defined). Idempotent on `id`. The `year`
+and `lineage` attributes on `object` are first-class — they're how
+time and lineage enter the graph. Each `INTRODUCE break F1` is a
+`INTRODUCE_NODE F1 ... break ...`; each `INTRODUCE object beta` is
+a `INTRODUCE_NODE beta ... spec ...` with optional lineage edges
+trailing.
+
+```text
+INTRODUCE break  F1    name="Some structural distinction" axes=[spatial]
+INTRODUCE object beta  year=1985 lineage=[some-family]
+INTRODUCE object alpha year=1965 lineage=[earlier-family]
+```
+
+#### `WITNESS <subject> <break> <kind> [notes]`     *(reduces to `EDGE`)*
+
+Record a contribution edge in the spec→break direction. Identical
+in semantics to `EDGE <subject> <break> <kind>` for any kind whose
+catalogued target-type is `break`; the verb's name preserves the
+methodology's original framing.
+
+```text
+WITNESS alpha F1 origin
+WITNESS beta  F1 catalogue-introduces
+```
+
+#### `REFINE <break> <object> <name> [description]`     *(reduces to `INTRODUCE_NODE` + `EDGE` × 2)*
+
+Introduce a refinement of a parent break. A refinement-name *is* a
+structural distinction — i.e., a child break — under (β). The
+verb's reduction is:
+
+```text
+REFINE P spec R desc
+  ≡ INTRODUCE_NODE R R break attrs={short_desc=desc}
+  + EDGE spec R origin
+  + EDGE spec P refines
+```
+
+The legacy `refinements` table is dual-written for
+backwards-compatible reads. Multiple refinements per (break,
+object) are admitted — each call introduces a fresh child break.
+
+```text
+REFINE F1 delta variant-a "first refinement of F1 at delta"
+REFINE F1 delta variant-b "second refinement of F1 at delta"
+```
+
+### CISC sugar — modal verbs (lifecycle)
+
+The three modal verbs below are **orbit-elements of `WITNESS`**
+parameterised by witness-kind: `defer` fixes `kind='deferred-candidate'`,
+`promote` fixes `kind='confirms'`, `boundary` fixes
+`kind='sibling-boundary'`. Each reduces to `WITNESS`, which itself
+reduces to `EDGE`. The orbit positions are catalogued for ergonomic
+reasons; `WITNESS` is the universal at the carrier-axis.
 
 #### `DEFER <break>`
 
@@ -1003,3 +1086,12 @@ SQL, executable Python) for the same underlying graph. Other
 substrates (document, graph, triple store) would carry the same
 content. The methodology is the equivalence-class; the substrates
 are representatives.
+
+The framework's strengthened self-hosting closure check (`theory.md`
+§ 14.5.8) verifies that every CISC verb's `derives_from` chain
+terminates in the RISC core (`introduce_node`, `edge`, `kquery`),
+and that the catalogue's IMPL ↔ CAT gap is empty, on every
+`check_self_hosting=True` open. The architectural detail of the
+RISC reframe lives in
+[`cotype/shadow_risc_core.md`](../../cotype/shadow_risc_core.md);
+deep readers should follow that thread.

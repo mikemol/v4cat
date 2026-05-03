@@ -1,17 +1,30 @@
 # v4cat — Symmetry-break cataloguing framework
 
+> *Grade: quick-start (one-page survey).
+> Deeper: [tutorial.md](src/v4cat/tutorial.md) (worked walk-through), then [methodology.md](src/v4cat/methodology.md) (operational design), then [theory.md](src/v4cat/theory.md) (foundations).
+> Architectural detail: [cotype/](cotype/).*
+
 A Python ISA + SQLite schema + MCP server for accumulating named
-structural distinctions ("breaks") about a domain, with witnesses,
-refinements, lineage edges, and the Klein-four read primitive.
+structural distinctions about a domain. The structural core is
+**three RISC primitives** — `introduce_node`, `edge`, `kquery` —
+plus a small declarative-artifact set (breaks, specs, tensions);
+every other verb in the ISA is documented sugar that reduces to
+these three. The strengthened self-hosting closure check
+(`theory.md` § 14.5.8) verifies the reductions on every catalogue
+open.
 
-The framework is **domain-agnostic**. The ISA's `introduce_object`,
-`introduce_break`, `witness`, `refine` verbs and the analytic views
-work the same whether the witness objects are programming languages,
-processors, cryptographic primitives, file systems, formal systems,
-ML architectures, or anything else with structure worth cataloguing.
-See [examples.md](examples.md) for domain templates.
+The framework is **domain-agnostic**. The same primitives and
+analytic views work whether the witness objects are programming
+languages, processors, cryptographic primitives, file systems,
+formal systems, ML architectures, or anything else with structure
+worth cataloguing. See [examples.md](examples.md) for domain
+templates.
 
-See [methodology.md](methodology.md) for the design.
+See [methodology.md](methodology.md) for the operational design,
+[tutorial.md](tutorial.md) for an LLM-friendly walk-through, and
+[cotype/](cotype/) for the architectural shadow library —
+including [cotype/shadow_risc_core.md](cotype/shadow_risc_core.md)
+which is the authoritative source for the RISC reframe.
 
 ## Layout
 
@@ -62,13 +75,19 @@ setup guide:
 - **`examples.md`**: domain templates — programming languages,
   cryptographic primitives, databases, file systems, network
   protocols, mathematical structures, OS designs, ML architectures.
+- **`cotype/`**: the shadow library — the authoritative source for
+  architectural commitments (RISC reframe, migration history,
+  doc-discipline, RFS findings, snap reports). Deep readers should
+  follow this thread; the user-facing docs above reference it where
+  architectural detail exceeds doc grade.
 
-All six files are exposed as MCP resources at `catalogue://readme`,
-`catalogue://mcp_setup`, `catalogue://tutorial`,
-`catalogue://methodology`, `catalogue://theory`, and
-`catalogue://examples`. There's also `catalogue://docs` — an
-index resource that lists everything available, suitable as the
-entry point for an LLM encountering the framework.
+All six user-facing files are exposed as MCP resources at
+`catalogue://readme`, `catalogue://mcp_setup`,
+`catalogue://tutorial`, `catalogue://methodology`,
+`catalogue://theory`, and `catalogue://examples`. There's also
+`catalogue://docs` — an index resource that lists everything
+available, suitable as the entry point for an LLM encountering
+the framework.
 
 ## Quick start
 

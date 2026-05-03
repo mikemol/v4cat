@@ -1,5 +1,9 @@
 # Examples — domain templates for the catalogue framework
 
+> *Grade: applications (D₅ — sideways orbit-element of theory.md).
+> Shallower: [tutorial.md](tutorial.md) (worked walk-through), [README.md](../../README.md) (quick-start).
+> Operational: [methodology.md](methodology.md). Architectural: [cotype/](../../cotype/).*
+
 This file sketches starter templates for several domains the
 framework applies to — enough to begin cataloguing each, not
 exhaustive coverage. The framework itself is domain-agnostic;
@@ -7,6 +11,16 @@ processors are one of several worked examples below, alongside
 programming languages, cryptography, databases, file systems,
 network protocols, mathematical structures, OS designs, and ML
 architectures.
+
+> **Note on the verbs used below:** All templates use the CISC
+> sugar verbs (`introduce_break`, `introduce_object`, `witness`,
+> `refine`) for ergonomics. Each delegates internally to the
+> three RISC primitives (`introduce_node`, `edge`, `kquery`);
+> domain extensions can mix CISC and RISC freely. See
+> [tutorial.md § 14](tutorial.md#14-using-the-risc-primitives-directly)
+> for side-by-side equivalents and
+> [cotype/shadow_risc_core.md](../../cotype/shadow_risc_core.md)
+> for the architectural source.
 
 For each template:
 
