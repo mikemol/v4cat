@@ -30,18 +30,19 @@ jobs:
           python -m pip install --upgrade pip
           pip install -e ".[dev]" coverage
 
-      - name: Run all five test suites
+      - name: Run all six test suites
         run: |
           python -m v4cat.tests.test_isa
           python -m v4cat.tests.test_mcp
           python -m v4cat.tests.test_sandbox
           python -m v4cat.tests.test_self_hosting
+          python -m v4cat.tests.test_risc
           python -m v4cat.tests.test_branch_coverage
 
       - name: Branch-coverage gate (100% required)
         run: |
           coverage erase
-          for t in test_isa test_mcp test_sandbox test_self_hosting test_branch_coverage; do
+          for t in test_isa test_mcp test_sandbox test_self_hosting test_risc test_branch_coverage; do
             coverage run --branch --source=v4cat --omit='*/tests/*' --append -m v4cat.tests.$t
           done
           coverage report --skip-empty --fail-under=100

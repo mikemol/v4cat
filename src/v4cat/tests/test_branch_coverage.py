@@ -31,8 +31,21 @@ from unittest.mock import patch
 from v4cat import SymmetryCatalogue, consistency
 from v4cat.cells import Cell, Kind
 from v4cat.bootstrap import (
+    RiscDisciplineViolation,
+    check_risc_discipline,
     enumerate_supported_cells,
     supported_kinds,
+)
+from v4cat.curry import (
+    AxisCutReferent,
+    CellReferent,
+    EdgeReferent,
+    KqueryNode,
+    LiteralReferent,
+    Param,
+    Tension,
+    evaluate_tension,
+    resolve,
 )
 from v4cat.theory import SIGNATURE, by_kind
 import v4cat.mcp_server as srv
@@ -295,6 +308,423 @@ def test_enumerate_supported_cells_filters_out_of_scope_kinds():
     o_cells = [c for c in SIGNATURE if c.kind == Kind.O]
     b_cells = [c for c in SIGNATURE if c.kind == Kind.B]
     assert len(impl_ids) == len(o_cells) + len(b_cells)
+
+
+# =============================================================================
+# (β) RISC reframe — branches in catalogue.py, bootstrap.py, curry.py
+# added by S₁–S₄ that test_risc.py doesn't fully exercise.
+# =============================================================================
+
+def test_introduce_node_default_branch_records_attributes():
+    """introduce_node default branch (non-break, non-tension) writes
+    type-attribute and any extra attrs to spec_attributes."""
+    cat = SymmetryCatalogue(':memory:')
+    cat.introduce_node(
+        'my-edge-kind', 'My edge kind', 'edge-kind',
+        attrs={'source-type': 'spec', 'target-type': 'break'},
+    )
+    rows = cat.query(
+        "SELECT name, value FROM spec_attributes "
+        "WHERE spec_id = 'my-edge-kind' ORDER BY name",
+    )
+    attrs = {r['name']: r['value'] for r in rows}
+    assert attrs.get('type') == 'edge-kind'
+    assert attrs.get('source-type') == 'spec'
+    assert attrs.get('target-type') == 'break'
+
+
+def test_introduce_node_default_branch_with_explicit_catalogue_order():
+    """introduce_node default branch when catalogue_order is provided
+    in attrs skips the auto-assign path."""
+    cat = SymmetryCatalogue(':memory:')
+    cat.introduce_node(
+        'foo', 'Foo', 'spec',
+        attrs={'catalogue_order': 99, 'year': 2000},
+    )
+    rows = cat.query(
+        "SELECT catalogue_order FROM specs WHERE id = 'foo'",
+    )
+    assert rows[0]['catalogue_order'] == 99
+
+
+def test_edge_unsupported_target_type_raises():
+    """edge() raises ValueError when kind's target-type is neither
+    'break' nor 'spec'."""
+    cat = SymmetryCatalogue(':memory:')
+    cat.introduce_node('weird-kind', 'Weird', 'edge-kind',
+                       attrs={'source-type': 'spec',
+                              'target-type': 'unknown-type'})
+    cat.introduce_node('a', 'A', 'spec', attrs={'year': 2000})
+    cat.introduce_node('b', 'B', 'spec', attrs={'year': 2001})
+    try:
+        cat.edge('a', 'b', 'weird-kind')
+    except ValueError as e:
+        assert 'unsupported target-type' in str(e)
+    else:
+        raise AssertionError('expected ValueError for unsupported target-type')
+
+
+def test_edge_lineage_kind_with_notes():
+    """edge() with target-type=spec writes notes to lineages."""
+    cat = SymmetryCatalogue(':memory:')
+    cat.introduce_node('alpha', 'Alpha', 'spec', attrs={'year': 2000})
+    cat.introduce_node('beta', 'Beta', 'spec', attrs={'year': 2010})
+    cat.edge('beta', 'alpha', 'descended-from', notes='direct descent')
+    rows = cat.query(
+        "SELECT notes FROM lineages "
+        "WHERE descendant_id='beta' AND ancestor_id='alpha'",
+    )
+    assert rows[0]['notes'] == 'direct descent'
+
+
+def test_attr_key_for_break_returns_none_for_non_kattr():
+    """_attr_key_for_break returns None when the break id doesn't
+    start with K-ATTR-."""
+    assert SymmetryCatalogue._attr_key_for_break('Q-introduce_node') is None
+    assert SymmetryCatalogue._attr_key_for_break('plain-break') is None
+
+
+def test_attr_key_for_break_handles_dashes():
+    """_attr_key_for_break converts dashes to underscores."""
+    assert SymmetryCatalogue._attr_key_for_break(
+        'K-ATTR-CATALOGUE-ORDER') == 'catalogue_order'
+    assert SymmetryCatalogue._attr_key_for_break(
+        'K-ATTR-SHORT-DESC') == 'short_desc'
+
+
+def test_node_type_attrs_skips_non_kattr_break():
+    """_node_type_attrs ignores witnesses whose break_number isn't a
+    K-ATTR-* break (the _attr_key_for_break returns None branch)."""
+    cat = SymmetryCatalogue(':memory:')
+    # Add a non-K-ATTR break and witness it from 'break' with kind='requires-attr'
+    cat.conn.execute(
+        "INSERT INTO breaks (number, name, short_desc) VALUES (?, ?, ?)",
+        ('Q-something-not-attr', 'Something', 'desc'),
+    )
+    cat.conn.execute(
+        "INSERT INTO witnesses (spec_id, break_number, kind, scope) "
+        "VALUES (?, ?, ?, 'spec')",
+        ('break', 'Q-something-not-attr', 'requires-attr'),
+    )
+    required, admitted = cat._node_type_attrs('break')
+    # Q-something-not-attr is skipped (returns None from _attr_key_for_break)
+    assert 'something' not in required
+    # The legitimate K-ATTR-* attrs still come through
+    assert 'name' in required
+
+
+def test_kind_source_type_returns_none_for_uncatalogued_kind():
+    """_kind_source_type returns None when the kind isn't catalogued."""
+    cat = SymmetryCatalogue(':memory:')
+    assert cat._kind_source_type('mythical-kind-xyz') is None
+
+
+def test_witness_with_agent_scope_writes_directly():
+    """witness(scope='agent') bypasses edge() to preserve the S8
+    agent-level scope distinction."""
+    cat = SymmetryCatalogue(':memory:')
+    cat.introduce_node('B1', 'B1', 'break')
+    cat.introduce_node('alpha', 'Alpha', 'spec', attrs={'year': 2000})
+    cat.witness('alpha', 'B1', 'origin', scope='agent')
+    rows = cat.query(
+        "SELECT scope FROM witnesses "
+        "WHERE spec_id='alpha' AND break_number='B1'",
+    )
+    assert rows[0]['scope'] == 'agent'
+
+
+def test_lineage_witness_without_seed_falls_back():
+    """lineage_witness() with check_self_hosting=False writes directly
+    to lineages (legacy path)."""
+    cat = SymmetryCatalogue(':memory:', check_self_hosting=False)
+    cat.introduce_object('alpha', 'Alpha')
+    cat.introduce_object('beta', 'Beta')
+    cat.lineage_witness('beta', 'alpha', 'descended-from',
+                        notes='legacy path')
+    rows = cat.query(
+        "SELECT notes FROM lineages "
+        "WHERE descendant_id='beta' AND ancestor_id='alpha'",
+    )
+    assert rows[0]['notes'] == 'legacy path'
+
+
+def test_introduce_break_without_seed_falls_back():
+    """introduce_break() with check_self_hosting=False writes directly
+    to breaks; axes still write to break_axes."""
+    cat = SymmetryCatalogue(':memory:', check_self_hosting=False)
+    cat.introduce_break('B-legacy', 'B-legacy', short_desc='via legacy path',
+                        axes=['spatial'])
+    rows = cat.query("SELECT short_desc FROM breaks WHERE number='B-legacy'")
+    assert rows[0]['short_desc'] == 'via legacy path'
+    axis_rows = cat.query(
+        "SELECT axis FROM break_axes WHERE break_number='B-legacy'",
+    )
+    assert axis_rows[0]['axis'] == 'spatial'
+
+
+def test_introduce_object_with_lineage_via_seed():
+    """introduce_object() with seed loaded delegates to introduce_node
+    + edge() per lineage entry."""
+    cat = SymmetryCatalogue(':memory:')
+    cat.introduce_object('alpha', 'Alpha', year=2000)
+    cat.introduce_object(
+        'beta', 'Beta', year=2010,
+        lineage=[('alpha', 'descended-from')],
+        attrs={'vendor': 'Acme'},
+    )
+    rows = cat.query(
+        "SELECT * FROM lineages "
+        "WHERE descendant_id='beta' AND ancestor_id='alpha'",
+    )
+    assert len(rows) == 1
+    attr_rows = cat.query(
+        "SELECT name, value FROM spec_attributes WHERE spec_id='beta'",
+    )
+    attrs = {r['name']: r['value'] for r in attr_rows}
+    assert attrs.get('vendor') == 'Acme'
+
+
+def test_introduce_tension_with_seed_and_breaks_involved():
+    """introduce_tension() with seed loaded delegates to introduce_node
+    plus tension_breaks for each break."""
+    cat = SymmetryCatalogue(':memory:')
+    cat.introduce_node('B1', 'B1', 'break')
+    cat.introduce_node('B2', 'B2', 'break')
+    cat.introduce_tension('T-x', 'tension', description='d',
+                          breaks_involved=['B1', 'B2'])
+    rows = cat.query(
+        "SELECT break_number FROM tension_breaks WHERE tension_id='T-x' "
+        "ORDER BY break_number",
+    )
+    assert [r['break_number'] for r in rows] == ['B1', 'B2']
+
+
+def test_refine_without_seed_legacy_only():
+    """refine() with check_self_hosting=False writes only to refinements;
+    no introduce_node delegation."""
+    cat = SymmetryCatalogue(':memory:', check_self_hosting=False)
+    cat.introduce_break('B1', 'B1')
+    cat.introduce_object('alpha', 'Alpha')
+    cat.refine('B1', 'alpha', 'r1', description='desc')
+    rows = cat.query(
+        "SELECT name, description FROM refinements WHERE name='r1'",
+    )
+    assert len(rows) == 1
+    # No new break created from refinement-name (legacy path)
+    breaks = cat.query("SELECT number FROM breaks WHERE number='r1'")
+    assert breaks == []
+
+
+def test_evaluate_tension_via_catalogue_method():
+    """SymmetryCatalogue.evaluate_tension delegates to curry's evaluator."""
+    cat = SymmetryCatalogue(':memory:')
+    cat.introduce_node('F1', 'F1', 'break')
+    cat.introduce_node('alpha', 'Alpha', 'spec', attrs={'year': 2000})
+    cat.edge('alpha', 'F1', 'origin')
+    t = Tension(
+        id='T-x', name='x', description=None, disposition='diagnostic',
+        parameters=(),
+        shape=KqueryNode(
+            a=EdgeReferent(pivot='F1', kinds=('origin',),
+                           pivot_role='target', return_role='source'),
+            b=LiteralReferent(ids=('alpha',)),
+        ),
+    )
+    cells = cat.evaluate_tension(t)
+    assert cells['11'] == ['alpha']
+
+
+def test_curry_param_resolves_string_to_singleton():
+    """Param resolved with a string value yields a singleton list
+    (the [str(val)] branch in resolve)."""
+    cat = SymmetryCatalogue(':memory:')
+    bindings = {'p': 'alpha'}
+    result = resolve(Param('p'), cat, bindings)
+    assert result == ['alpha']
+
+
+def test_curry_param_resolves_int_to_singleton_str():
+    """Param with non-string non-list value gets stringified."""
+    cat = SymmetryCatalogue(':memory:')
+    result = resolve(Param('p'), cat, {'p': 42})
+    assert result == ['42']
+
+
+def test_curry_edge_referent_empty_kinds_returns_empty():
+    """EdgeReferent with empty kinds tuple short-circuits to []."""
+    cat = SymmetryCatalogue(':memory:')
+    cat.introduce_node('F1', 'F1', 'break')
+    er = EdgeReferent(pivot='F1', kinds=(), pivot_role='target',
+                      return_role='source')
+    assert resolve(er, cat, {}) == []
+
+
+def test_curry_edge_referent_with_param_pivot():
+    """EdgeReferent with Param pivot resolves the binding before query."""
+    cat = SymmetryCatalogue(':memory:')
+    cat.introduce_node('F1', 'F1', 'break')
+    cat.introduce_node('alpha', 'Alpha', 'spec', attrs={'year': 2000})
+    cat.edge('alpha', 'F1', 'origin')
+    er = EdgeReferent(pivot=Param('B'), kinds=('origin',),
+                      pivot_role='target', return_role='source')
+    assert resolve(er, cat, {'B': 'F1'}) == ['alpha']
+
+
+def test_curry_axis_cut_with_param_threshold():
+    """AxisCutReferent with Param threshold resolves the binding."""
+    cat = SymmetryCatalogue(':memory:')
+    cat.introduce_node('alpha', 'Alpha', 'spec', attrs={'year': 1990})
+    cat.introduce_node('beta', 'Beta', 'spec', attrs={'year': 2010})
+    ac = AxisCutReferent(axis_column='year', op='<',
+                         threshold=Param('t'))
+    result = resolve(ac, cat, {'t': 2000})
+    assert 'alpha' in result and 'beta' not in result
+
+
+def test_curry_axis_cut_with_param_axis_column():
+    """AxisCutReferent with Param axis_column resolves the binding."""
+    cat = SymmetryCatalogue(':memory:')
+    cat.introduce_node('alpha', 'Alpha', 'spec', attrs={'year': 1990})
+    ac = AxisCutReferent(axis_column=Param('col'), op='<',
+                         threshold=2000)
+    result = resolve(ac, cat, {'col': 'year'})
+    assert 'alpha' in result
+
+
+def test_curry_axis_cut_rejects_invalid_op():
+    """AxisCutReferent.op outside the whitelist raises ValueError."""
+    cat = SymmetryCatalogue(':memory:')
+    ac = AxisCutReferent(axis_column='year', op='!!', threshold=2000)
+    try:
+        resolve(ac, cat, {})
+    except ValueError as e:
+        assert 'op must be one of' in str(e)
+    else:
+        raise AssertionError('expected ValueError for invalid op')
+
+
+def test_curry_axis_cut_rejects_unknown_axis_column():
+    """AxisCutReferent.axis_column not on specs raises ValueError."""
+    cat = SymmetryCatalogue(':memory:')
+    ac = AxisCutReferent(axis_column='not_a_col', op='<', threshold=1)
+    try:
+        resolve(ac, cat, {})
+    except ValueError as e:
+        assert 'not found on specs' in str(e)
+    else:
+        raise AssertionError('expected ValueError for unknown axis_column')
+
+
+def test_curry_resolve_unknown_referent_type_raises():
+    """resolve() with a type outside the Referent union raises TypeError."""
+    cat = SymmetryCatalogue(':memory:')
+    try:
+        resolve("not a referent", cat, {})  # type: ignore[arg-type]
+    except TypeError as e:
+        assert 'unknown Referent type' in str(e)
+    else:
+        raise AssertionError('expected TypeError')
+
+
+def test_curry_evaluate_node_with_universe_referent():
+    """evaluate_node with a non-None universe referent passes it to kquery."""
+    cat = SymmetryCatalogue(':memory:')
+    cat.introduce_node('F1', 'F1', 'break')
+    cat.introduce_node('alpha', 'Alpha', 'spec', attrs={'year': 2000})
+    cat.edge('alpha', 'F1', 'origin')
+    node = KqueryNode(
+        a=LiteralReferent(ids=('alpha',)),
+        b=LiteralReferent(ids=('beta',)),
+        universe=LiteralReferent(ids=('alpha', 'beta', 'gamma')),
+    )
+    t = Tension(id='T', name='T', description=None, disposition='diagnostic',
+                parameters=(), shape=node)
+    cells = cat.evaluate_tension(t)
+    assert 'gamma' in cells['00']
+
+
+def test_risc_violation_message_contains_payload():
+    """RiscDisciplineViolation's str includes its dangling/cyclic
+    payloads."""
+    err = RiscDisciplineViolation(
+        dangling=[('cell-x', 'missing-y')], cyclic=['cell-z'],
+    )
+    msg = str(err)
+    assert 'cell-x' in msg
+    assert 'missing-y' in msg
+    assert 'cell-z' in msg
+
+
+def test_check_risc_discipline_skips_self_chain():
+    """check_risc_discipline correctly walks chains of length > 1
+    (defer → witness → edge → None terminates cleanly)."""
+    # The current SIGNATURE has exactly such chains — this test
+    # exercises the recurse-into-non-None-derives_from branch.
+    check_risc_discipline()  # no exception
+
+
+def test_curry_param_resolves_list_value_returns_copy():
+    """Param with a list binding returns a list copy (the
+    `return list(val)` branch)."""
+    cat = SymmetryCatalogue(':memory:')
+    out = resolve(Param('p'), cat, {'p': ['alpha', 'beta']})
+    assert out == ['alpha', 'beta']
+
+
+def test_introduce_object_legacy_path_records_attrs():
+    """introduce_object() with check_self_hosting=False writes attrs
+    via the legacy direct INSERT to spec_attributes (line 239-240)."""
+    cat = SymmetryCatalogue(':memory:', check_self_hosting=False)
+    cat.introduce_object(
+        'alpha', 'Alpha', year=2000,
+        attrs={'vendor': 'Acme', 'paradigm': 'imperative'},
+    )
+    rows = cat.query(
+        "SELECT name, value FROM spec_attributes WHERE spec_id='alpha' "
+        "ORDER BY name",
+    )
+    attrs = {r['name']: r['value'] for r in rows}
+    assert attrs.get('vendor') == 'Acme'
+    assert attrs.get('paradigm') == 'imperative'
+
+
+def test_lineage_witness_with_seed_delegates_to_edge():
+    """lineage_witness() with check_self_hosting=True (default)
+    delegates to edge (the if-loaded branch at catalogue.py:770)."""
+    cat = SymmetryCatalogue(':memory:')
+    cat.introduce_node('alpha', 'Alpha', 'spec', attrs={'year': 2000})
+    cat.introduce_node('beta', 'Beta', 'spec', attrs={'year': 2010})
+    cat.lineage_witness('beta', 'alpha', 'descended-from')
+    rows = cat.query(
+        "SELECT * FROM lineages "
+        "WHERE descendant_id='beta' AND ancestor_id='alpha'",
+    )
+    assert len(rows) == 1
+
+
+def test_check_risc_discipline_doesnt_double_record_cycle():
+    """When a cell's derives_from has duplicate references that all
+    lead into a cycle, check_risc_discipline records the cell as
+    cyclic only once (the `if cell.id not in cyclic` else branch)."""
+    # Construct a cell whose derives_from has TWO refs to the same
+    # cyclic counterpart. The BFS visits the cycle from both refs;
+    # cell.id should be appended to cyclic exactly once.
+    a = Cell('cyc-dup-a', Kind.O, 'cyc dup a',
+             derives_from=('cyc-dup-b', 'cyc-dup-b'))
+    b = Cell('cyc-dup-b', Kind.O, 'cyc dup b',
+             derives_from=('cyc-dup-a',))
+    SIGNATURE.append(a)
+    SIGNATURE.append(b)
+    try:
+        check_risc_discipline()
+    except RiscDisciplineViolation as e:
+        # 'cyc-dup-a' should appear exactly once in cyclic, not twice
+        assert e.cyclic.count('cyc-dup-a') == 1
+    else:
+        raise AssertionError('expected RiscDisciplineViolation for cycle')
+    finally:
+        SIGNATURE.remove(a)
+        SIGNATURE.remove(b)
 
 
 def test_enumerate_supported_cells_handles_missing_witness_table():
@@ -673,6 +1103,38 @@ SYNC_TESTS = [
     test_supported_kinds_handles_missing_table,
     test_enumerate_supported_cells_filters_out_of_scope_kinds,
     test_enumerate_supported_cells_handles_missing_witness_table,
+    # (β) RISC reframe coverage
+    test_introduce_node_default_branch_records_attributes,
+    test_introduce_node_default_branch_with_explicit_catalogue_order,
+    test_edge_unsupported_target_type_raises,
+    test_edge_lineage_kind_with_notes,
+    test_attr_key_for_break_returns_none_for_non_kattr,
+    test_attr_key_for_break_handles_dashes,
+    test_node_type_attrs_skips_non_kattr_break,
+    test_kind_source_type_returns_none_for_uncatalogued_kind,
+    test_witness_with_agent_scope_writes_directly,
+    test_lineage_witness_without_seed_falls_back,
+    test_introduce_break_without_seed_falls_back,
+    test_introduce_object_with_lineage_via_seed,
+    test_introduce_tension_with_seed_and_breaks_involved,
+    test_refine_without_seed_legacy_only,
+    test_evaluate_tension_via_catalogue_method,
+    test_curry_param_resolves_string_to_singleton,
+    test_curry_param_resolves_int_to_singleton_str,
+    test_curry_edge_referent_empty_kinds_returns_empty,
+    test_curry_edge_referent_with_param_pivot,
+    test_curry_axis_cut_with_param_threshold,
+    test_curry_axis_cut_with_param_axis_column,
+    test_curry_axis_cut_rejects_invalid_op,
+    test_curry_axis_cut_rejects_unknown_axis_column,
+    test_curry_resolve_unknown_referent_type_raises,
+    test_curry_evaluate_node_with_universe_referent,
+    test_risc_violation_message_contains_payload,
+    test_check_risc_discipline_skips_self_chain,
+    test_curry_param_resolves_list_value_returns_copy,
+    test_introduce_object_legacy_path_records_attrs,
+    test_lineage_witness_with_seed_delegates_to_edge,
+    test_check_risc_discipline_doesnt_double_record_cycle,
 ]
 
 ASYNC_TESTS = [

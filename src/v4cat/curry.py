@@ -258,9 +258,10 @@ def _resolve_edge(
         params = [pivot, *referent.kinds]
         cur = cat.conn.execute(sql, params)
         for row in cur.fetchall():
-            value = row[col_return]
-            if value is not None:
-                results.add(value)
+            # witnesses.{spec_id, break_number} and lineages.{descendant_id,
+            # ancestor_id} are all schema-NOT-NULL, so row[col_return] is
+            # never NULL. No defensive None-check.
+            results.add(row[col_return])
     return sorted(results)
 
 
