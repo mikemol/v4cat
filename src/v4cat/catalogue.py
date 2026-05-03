@@ -138,12 +138,26 @@ class SymmetryCatalogue:
         short_desc: Optional[str] = None,
         axes: Optional[Iterable[str]] = None,
     ) -> None:
-        """ISA: INTRODUCE break <number>"""
-        self.conn.execute(
-            "INSERT OR IGNORE INTO breaks (number, name, short_desc) "
-            "VALUES (?, ?, ?)",
-            (number, name, short_desc),
-        )
+        """ISA: INTRODUCE break <number>
+
+        CISC sugar over :meth:`introduce_node` (type='break'). When the
+        type-system seed is absent (``check_self_hosting=False``), falls
+        back to a direct INSERT preserving the legacy behaviour. The
+        ``axes`` parameter writes to ``break_axes`` directly — a
+        localised CISC-internal sub-INSERT, since axes are
+        break→axis-string and don't fit ``edge``'s typed-edge shape.
+        """
+        if self._type_system_loaded():
+            self.introduce_node(
+                number, name, type='break',
+                attrs={'short_desc': short_desc},
+            )
+        else:
+            self.conn.execute(
+                "INSERT OR IGNORE INTO breaks (number, name, short_desc) "
+                "VALUES (?, ?, ?)",
+                (number, name, short_desc),
+            )
         if axes:
             for axis in axes:
                 self.conn.execute(
@@ -187,6 +201,22 @@ class SymmetryCatalogue:
         extension) are preserved; only new ISA-introduced objects
         auto-assign.
         """
+        if self._type_system_loaded():
+            # CISC over introduce_node(type='spec') + edge(...) for lineage
+            merged: dict[str, Any] = {
+                'year': year,
+                'catalogue_order': catalogue_order,
+                'notes': notes,
+            }
+            if attrs:
+                merged.update(attrs)
+            self.introduce_node(id, name, type='spec', attrs=merged)
+            if lineage:
+                for ancestor_id, kind in lineage:
+                    self.edge(id, ancestor_id, kind)
+            return
+
+        # Legacy direct path (used when check_self_hosting=False)
         if catalogue_order is None:
             cur = self.conn.execute("SELECT MAX(catalogue_order) FROM specs")
             max_order = cur.fetchone()[0] or 0
@@ -226,6 +256,293 @@ class SymmetryCatalogue:
             (object_,),
         )
         return {row['name']: row['value'] for row in cur.fetchall()}
+
+    # =================================================================
+    # RISC primitives — introduce_node, edge, evaluate_tension
+    #
+    # The (β) RISC core (cotype/shadow_risc_core.md): three primitives
+    # cover all declarative content. introduce_node and edge dispatch
+    # over the catalogued type-system seed (loaded by S₁ in
+    # framework_seed.sql); evaluate_tension walks a curry-spec AST
+    # (defined in v4cat.curry) and returns the klein-four partition.
+    #
+    # Both verbs require the type-system seed to be loaded. Open the
+    # catalogue with ``check_self_hosting=True`` (the default) to
+    # use them; legacy CISC verbs (introduce_break, introduce_object,
+    # witness, ...) work without the seed.
+    # =================================================================
+
+    def _type_system_loaded(self) -> bool:
+        """True iff the (β) type-system seed (S12) is loaded.
+
+        Detected by the presence of the self-typed 'node-type' spec —
+        the bootstrap floor's fixpoint marker.
+        """
+        cur = self.conn.execute(
+            "SELECT 1 FROM specs WHERE id = 'node-type'"
+        )
+        return cur.fetchone() is not None
+
+    def _kind_target_type(self, kind: str) -> Optional[str]:
+        """Look up the catalogued target-type for an edge-kind.
+
+        Returns the value string (e.g., 'break' or 'spec') or None
+        if the kind isn't catalogued / has no target-type witness.
+        """
+        cur = self.conn.execute(
+            "SELECT value FROM spec_attributes "
+            "WHERE spec_id = ? AND name = 'target-type'",
+            (kind,),
+        )
+        row = cur.fetchone()
+        return row['value'] if row else None
+
+    def _kind_source_type(self, kind: str) -> Optional[str]:
+        """Look up the catalogued source-type for an edge-kind."""
+        cur = self.conn.execute(
+            "SELECT value FROM spec_attributes "
+            "WHERE spec_id = ? AND name = 'source-type'",
+            (kind,),
+        )
+        row = cur.fetchone()
+        return row['value'] if row else None
+
+    def _node_type_attrs(self, type_: str) -> tuple[set[str], set[str]]:
+        """Return (required_attrs, admitted_attrs) for a node-type.
+
+        Each set contains attribute keys (e.g., 'number', 'name',
+        'year') derived from the K-ATTR-* break ids by stripping the
+        prefix and lowercasing/dash→underscore. Empty sets if the
+        type isn't catalogued.
+        """
+        cur = self.conn.execute(
+            "SELECT break_number, kind FROM witnesses "
+            "WHERE spec_id = ? AND kind IN ('requires-attr','admits-attr')",
+            (type_,),
+        )
+        required: set[str] = set()
+        admitted: set[str] = set()
+        for row in cur.fetchall():
+            attr_key = self._attr_key_for_break(row['break_number'])
+            if attr_key is None:
+                continue
+            if row['kind'] == 'requires-attr':
+                required.add(attr_key)
+            else:
+                admitted.add(attr_key)
+        return required, admitted
+
+    @staticmethod
+    def _attr_key_for_break(break_id: str) -> Optional[str]:
+        """Convert K-ATTR-X break id to Python attribute key.
+
+        K-ATTR-NUMBER → 'number'; K-ATTR-CATALOGUE-ORDER →
+        'catalogue_order'; K-ATTR-SHORT-DESC → 'short_desc'. Returns
+        None for non-K-ATTR breaks.
+        """
+        prefix = 'K-ATTR-'
+        if not break_id.startswith(prefix):
+            return None
+        return break_id[len(prefix):].lower().replace('-', '_')
+
+    def introduce_node(
+        self,
+        id: str,
+        name: str,
+        type: str,
+        *,
+        attrs: Optional[dict[str, Any]] = None,
+    ) -> None:
+        """ISA: INTRODUCE node — the RISC primitive.
+
+        Dispatches on the catalogued node-type. Validates that
+        ``type`` is a catalogued node-type, that ``attrs`` covers
+        all required attributes, and that no attrs key is outside
+        the admitted set.
+
+        Requires the type-system seed (open with
+        ``check_self_hosting=True``).
+        """
+        if not self._type_system_loaded():
+            raise RuntimeError(
+                "introduce_node() requires the (β) type-system seed; "
+                "open the catalogue with check_self_hosting=True"
+            )
+        attrs = dict(attrs or {})
+
+        # Validate: type is catalogued
+        cur = self.conn.execute(
+            "SELECT 1 FROM spec_attributes "
+            "WHERE spec_id = ? AND name = 'type' AND value = 'node-type'",
+            (type,),
+        )
+        if cur.fetchone() is None:
+            raise ValueError(
+                f"unknown node-type {type!r}; introduce it first via "
+                f"introduce_node(id={type!r}, type='node-type', ...)"
+            )
+
+        # Validate: attrs satisfy the catalogued attribute-schema.
+        # 'id' and 'name' are top-level params — they implicitly satisfy
+        # K-ATTR-ID / K-ATTR-NUMBER and K-ATTR-NAME.
+        required, admitted = self._node_type_attrs(type)
+        implicitly_satisfied = {'id', 'name', 'number'}
+        missing = required - set(attrs) - implicitly_satisfied
+        if missing:
+            raise ValueError(
+                f"node type {type!r} requires attrs {sorted(missing)}; "
+                f"required: {sorted(required)}, admitted: {sorted(admitted)}"
+            )
+
+        # Closed-schema types reject unknown attrs.  Currently only
+        # 'break' is closed (its physical table has fixed columns and
+        # no spec_attributes-equivalent open carrier). Open types
+        # ('spec', 'tension', 'node-type', 'edge-kind', and any
+        # domain-introduced type) accept extras — they either land in
+        # spec_attributes ('spec'-family) or in additional columns on
+        # the type's physical table ('tension': status,
+        # addressing_stage, etc.).
+        if type == 'break':
+            unknown = set(attrs) - required - admitted
+            if unknown:
+                raise ValueError(
+                    f"node type {type!r} doesn't admit attrs "
+                    f"{sorted(unknown)}; required: {sorted(required)}, "
+                    f"admitted: {sorted(admitted)}"
+                )
+
+        # Dispatch to the appropriate physical table
+        if type == 'break':
+            self.conn.execute(
+                "INSERT OR IGNORE INTO breaks (number, name, short_desc) "
+                "VALUES (?, ?, ?)",
+                (id, name, attrs.get('short_desc')),
+            )
+        elif type == 'tension':
+            self.conn.execute(
+                "INSERT OR IGNORE INTO tensions "
+                "(id, name, description, status, addressing_stage, "
+                " disposition, parameters_json, shape_json) "
+                "VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+                (
+                    id, name,
+                    attrs.get('description'),
+                    attrs.get('status'),
+                    attrs.get('addressing_stage'),
+                    attrs.get('disposition', 'concern'),
+                    attrs.get('parameters'),
+                    attrs.get('shape'),
+                ),
+            )
+        else:
+            # Default: spec, node-type, edge-kind, or any
+            # domain-introduced type lands in the specs table with
+            # type recorded in spec_attributes.
+            catalogue_order = attrs.get('catalogue_order')
+            if catalogue_order is None and type == 'spec':
+                cur = self.conn.execute(
+                    "SELECT MAX(catalogue_order) FROM specs"
+                )
+                max_order = cur.fetchone()[0] or 0
+                catalogue_order = max_order + 1
+            self.conn.execute(
+                "INSERT OR IGNORE INTO specs "
+                "(id, name, year, catalogue_order, notes) "
+                "VALUES (?, ?, ?, ?, ?)",
+                (id, name, attrs.get('year'),
+                 catalogue_order, attrs.get('notes')),
+            )
+            # Record the type if it's not the default 'spec'
+            if type != 'spec':
+                self.conn.execute(
+                    "INSERT OR IGNORE INTO spec_attributes "
+                    "(spec_id, name, value) VALUES (?, 'type', ?)",
+                    (id, type),
+                )
+            # Record any other admitted attributes that aren't real
+            # specs columns
+            specs_columns = {'year', 'catalogue_order', 'notes'}
+            for key, value in attrs.items():
+                if key in specs_columns:
+                    continue
+                self.conn.execute(
+                    "INSERT OR IGNORE INTO spec_attributes "
+                    "(spec_id, name, value) VALUES (?, ?, ?)",
+                    (id, key, None if value is None else str(value)),
+                )
+
+    def edge(
+        self,
+        src: str,
+        tgt: str,
+        kind: str,
+        *,
+        notes: Optional[str] = None,
+    ) -> None:
+        """ISA: EDGE — the RISC primitive for typed edges.
+
+        Validates that ``kind`` is a catalogued edge-kind with a
+        declared target-type, then dispatches to the witnesses
+        table (target-type='break') or lineages table
+        (target-type='spec').
+
+        Requires the type-system seed (open with
+        ``check_self_hosting=True``).
+        """
+        if not self._type_system_loaded():
+            raise RuntimeError(
+                "edge() requires the (β) type-system seed; "
+                "open the catalogue with check_self_hosting=True"
+            )
+        target_type = self._kind_target_type(kind)
+        if target_type is None:
+            raise ValueError(
+                f"edge-kind {kind!r} is not catalogued (no target-type "
+                f"declared); introduce it first via "
+                f"introduce_node(id={kind!r}, type='edge-kind', "
+                f"attrs={{'source-type': ..., 'target-type': ...}})"
+            )
+
+        if target_type == 'break':
+            self.conn.execute(
+                "INSERT OR IGNORE INTO witnesses "
+                "(spec_id, break_number, kind, notes, scope) "
+                "VALUES (?, ?, ?, ?, 'spec')",
+                (src, tgt, kind, notes),
+            )
+        elif target_type == 'spec':
+            self.conn.execute(
+                "INSERT OR IGNORE INTO lineages "
+                "(descendant_id, ancestor_id, kind, notes) "
+                "VALUES (?, ?, ?, ?)",
+                (src, tgt, kind, notes),
+            )
+        else:
+            raise ValueError(
+                f"edge-kind {kind!r} has unsupported target-type "
+                f"{target_type!r}; expected 'break' or 'spec'"
+            )
+
+    def evaluate_tension(
+        self,
+        tension: Any,  # v4cat.curry.Tension; Any to avoid forward-ref import
+        **bindings: Any,
+    ) -> dict[str, list[str]]:
+        """Evaluate a tension's curry-spec AST against this catalogue.
+
+        Returns the klein-four partition::
+
+            {'00': [...], '01': [...], '10': [...], '11': [...]}
+
+        ``tension`` must be a :class:`v4cat.curry.Tension` instance.
+        Loading tensions from the catalogue's tensions table (i.e.,
+        looking them up by id and deserialising ``shape_json``) is
+        a follow-on capability landing in S₃ when the framework's
+        own utility-tensions are catalogued in framework_seed.sql.
+        """
+        # Lazy import to avoid module-load circularity
+        from .curry import evaluate_tension as _evaluate
+        return _evaluate(tension, self, **bindings)
 
     # =================================================================
     # Tropical queries over ordered columns
@@ -364,13 +681,31 @@ class SymmetryCatalogue:
         addressing_stage: Optional[str] = None,
         breaks_involved: Optional[Iterable[str]] = None,
     ) -> None:
-        """ISA: INTRODUCE tension <id>"""
-        self.conn.execute(
-            "INSERT OR IGNORE INTO tensions "
-            "(id, name, description, status, addressing_stage) "
-            "VALUES (?, ?, ?, ?, ?)",
-            (id, name, description, status, addressing_stage),
-        )
+        """ISA: INTRODUCE tension <id>
+
+        CISC sugar over :meth:`introduce_node` (type='tension') with
+        disposition='concern' (the legacy "tension as structural
+        concern" framing). The ``breaks_involved`` parameter writes
+        to ``tension_breaks`` directly — a localised CISC-internal
+        sub-INSERT.
+        """
+        if self._type_system_loaded():
+            self.introduce_node(
+                id, name, type='tension',
+                attrs={
+                    'description':      description,
+                    'status':           status,
+                    'addressing_stage': addressing_stage,
+                    'disposition':      'concern',
+                },
+            )
+        else:
+            self.conn.execute(
+                "INSERT OR IGNORE INTO tensions "
+                "(id, name, description, status, addressing_stage) "
+                "VALUES (?, ?, ?, ?, ?)",
+                (id, name, description, status, addressing_stage),
+            )
         if breaks_involved:
             for break_ in breaks_involved:
                 self.conn.execute(
@@ -391,17 +726,55 @@ class SymmetryCatalogue:
     ) -> None:
         """ISA: WITNESS <subject> <break> <kind>
 
+        CISC sugar over :meth:`edge` for the default ``scope='spec'``.
+        The ``scope='agent'`` path (S8 distinction for agent-level
+        attribution) writes directly since :meth:`edge` doesn't carry
+        scope.
+
         ``kind`` should be one of the documented vocabulary in
         methodology.md: origin, catalogue-introduces, confirms,
         refines, first-witness, precedes, cross-vendor, inherits,
         deferred-candidate, sibling-boundary, gates-with-fault.
         """
-        self.conn.execute(
-            "INSERT OR IGNORE INTO witnesses "
-            "(spec_id, break_number, kind, notes, scope) "
-            "VALUES (?, ?, ?, ?, ?)",
-            (subject, break_, kind, notes, scope),
-        )
+        if self._type_system_loaded() and scope == 'spec':
+            self.edge(subject, break_, kind, notes=notes)
+        else:
+            self.conn.execute(
+                "INSERT OR IGNORE INTO witnesses "
+                "(spec_id, break_number, kind, notes, scope) "
+                "VALUES (?, ?, ?, ?, ?)",
+                (subject, break_, kind, notes, scope),
+            )
+
+    def lineage_witness(
+        self,
+        descendant: str,
+        ancestor: str,
+        kind: str,
+        *,
+        notes: Optional[str] = None,
+    ) -> None:
+        """ISA: LINEAGE-WITNESS <descendant> <ancestor> <kind>
+
+        CISC sugar over :meth:`edge` for spec→spec edges (the lineage
+        graph). Surfaces what was previously buried in
+        ``introduce_object``'s ``lineage=...`` parameter as a
+        first-class verb.
+
+        ``kind`` should be one of the documented lineage-graph
+        vocabulary: 'descended-from', 'inherits-from', 'family-member'.
+        Without the type-system seed, falls back to a direct INSERT
+        into the lineages table.
+        """
+        if self._type_system_loaded():
+            self.edge(descendant, ancestor, kind, notes=notes)
+        else:
+            self.conn.execute(
+                "INSERT OR IGNORE INTO lineages "
+                "(descendant_id, ancestor_id, kind, notes) "
+                "VALUES (?, ?, ?, ?)",
+                (descendant, ancestor, kind, notes),
+            )
 
     def refine(
         self,
@@ -413,9 +786,39 @@ class SymmetryCatalogue:
     ) -> None:
         """ISA: REFINE <break> <object> <name>
 
-        Records a named refinement. Multiple refinements per
-        (break, object) edge are admitted.
+        CISC sugar; the principal RISC composition. Per
+        cotype/shadow_risc_core.md, a refinement-name *is* a
+        structural distinction (a break). The rewrite is::
+
+            refine(P, spec, R, desc)
+              ≡ introduce_node(R, R, 'break',
+                               attrs={'short_desc': desc})   # the refinement-as-break
+                + edge(spec, R, 'origin')                    # spec originates R
+                + edge(spec, P, 'refines')                   # spec refines parent P
+
+        The legacy ``refinements`` table is dual-written to preserve
+        backwards-compatible reads (``refinements_for_break`` and
+        existing schema queries against the table). When the type-
+        system seed is absent, only the legacy INSERT runs.
+
+        Multiple refinements per (break, object) are admitted —
+        ``refinements`` has an auto-increment ``id`` so each call
+        creates a row even when (break, spec, name) repeat.
         """
+        if self._type_system_loaded():
+            # The refinement-name becomes a catalogued child break.
+            # INSERT OR IGNORE semantics in introduce_node mean
+            # repeated calls with the same name silently no-op for
+            # the break/origin/refines triple, while the legacy
+            # refinements row below still records each call.
+            self.introduce_node(
+                name, name, type='break',
+                attrs={'short_desc': description},
+            )
+            self.edge(object_, name,   'origin')
+            self.edge(object_, break_, 'refines')
+        # Dual-write to the legacy refinements table (anti-pattern:
+        # no drops; existing readers continue to function).
         self.conn.execute(
             "INSERT INTO refinements "
             "(break_number, spec_id, name, description) "

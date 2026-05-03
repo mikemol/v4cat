@@ -358,11 +358,15 @@ def test_mixed_breaks_finds_multi_axis():
 def test_top_originators_ranks_by_breaks_originated():
     cat = SymmetryCatalogue(':memory:')
     populate_synthetic(cat)
-    top = top_originators(cat, limit=5)
+    top = top_originators(cat, limit=10)
     counts = {row['spec_name']: row['breaks_originated'] for row in top}
-    # alpha: F1; beta: F2; gamma: F3 (all originated 1 each)
+    # alpha: F1                                                       → 1
+    # beta:  F2 + foo-extension + baz-extension (the latter two are  → 3
+    #        promoted to first-class breaks by refine() under the
+    #        (β) RISC reframe — see cotype/shadow_risc_core.md)
+    # gamma: F3                                                       → 1
     assert counts.get('Object Alpha') == 1
-    assert counts.get('Object Beta')  == 1
+    assert counts.get('Object Beta')  == 3
     assert counts.get('Object Gamma') == 1
 
 
