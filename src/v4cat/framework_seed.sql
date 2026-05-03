@@ -35,42 +35,54 @@ INSERT OR IGNORE INTO breaks (number, name, short_desc) VALUES
 -- One break per primitive operation in catalogue/theory.py SIGNATURE.
 -- Naming convention: catalogue id is 'Q-' + cell.id (per
 -- bootstrap._catalogue_id_for).
+--
+-- S₄ reclassification (cotype/shadow_migration_04_signature_reclassify.md):
+-- the (β) RISC core is {Q-introduce_node, Q-edge, Q-kquery}; everything
+-- else is CISC sugar with documented derives_from chains in theory.py.
 INSERT OR IGNORE INTO breaks (number, name, short_desc) VALUES
-    -- Object-introduction operations (kind O)
+    -- RISC core (β) — derives_from=None in SIGNATURE
+    ('Q-introduce_node',    'introduce_node operation',
+     'RISC primitive: universal node introduction'),
+    ('Q-edge',              'edge operation',
+     'RISC primitive: universal typed-edge introduction'),
+    ('Q-kquery',            'kquery operation',
+     'RISC primitive: Klein-four read classifier (universal read)'),
+
+    -- CISC sugar (object-introduction, kind O)
     ('Q-introduce_object',  'introduce_object operation',
-     'Object-introduction primitive'),
+     'CISC sugar: introduce_node(type=spec) + edge for lineage'),
     ('Q-introduce_tension', 'introduce_tension operation',
-     'Tension-introduction primitive'),
+     'CISC sugar: introduce_node(type=tension)'),
 
-    -- Break-introduction (kind B)
+    -- CISC sugar (break-introduction, kind B)
     ('Q-introduce_break',   'introduce_break operation',
-     'Break-introduction primitive'),
+     'CISC sugar: introduce_node(type=break)'),
 
-    -- Witness operations (kind W)
+    -- CISC sugar (witness operations, kind W)
     ('Q-witness',           'witness operation',
-     'Typed-edge introduction primitive'),
+     'CISC sugar: edge(...) with default scope=spec'),
+    ('Q-lineage_witness',   'lineage_witness operation',
+     'CISC sugar: edge(...) for spec-spec graph'),
     ('Q-defer',             'defer operation',
-     'Witness-shorthand for kind=deferred-candidate'),
+     'Orbit-element of witness with kind=deferred-candidate'),
     ('Q-promote',           'promote operation',
-     'Witness-shorthand for kind=confirms (promotion)'),
+     'Orbit-element of witness with kind=confirms (promotion)'),
     ('Q-boundary',          'boundary operation',
-     'Witness-shorthand for kind=sibling-boundary'),
+     'Orbit-element of witness with kind=sibling-boundary'),
 
-    -- Refinement (kind R)
+    -- CISC sugar (refinement, kind R)
     ('Q-refine',            'refine operation',
-     'Refinement-introduction primitive'),
+     'CISC sugar: introduce_node(child-break) + edge(origin) + edge(refines)'),
 
-    -- Schema-extension (kind E)
+    -- Schema-extension (kind E) — substrate-coupled, not RISC-reducible
     ('Q-load_extension',    'load_extension operation',
      'Domain-extension loading primitive'),
 
-    -- Read primitives (kind K)
-    ('Q-kquery',            'kquery operation',
-     'Klein-four read classifier (the universal read primitive)'),
+    -- CISC sugar (read primitives, kind K) — orbit-elements of kquery
     ('Q-tropical_min',      'tropical_min operation',
-     'Generic tropical-MIN over an ordered column'),
+     'Orbit-element of kquery: sweep over ordered axis (MIN)'),
     ('Q-tropical_max',      'tropical_max operation',
-     'Generic tropical-MAX over an ordered column'),
+     'Orbit-element of kquery: sweep over ordered axis (MAX)'),
 
     -- Closure check (kind X)
     ('Q-check_closure',     'check_closure operation',
@@ -83,16 +95,21 @@ INSERT OR IGNORE INTO witnesses (spec_id, break_number, kind, notes) VALUES
      'Scope declaration; recursion clause 3 of Def 14.7'),
     ('framework', 'Q-bootstrap-closure', 'catalogue-introduces',
      'Preservation theorem; theorem 14.5'),
+    -- RISC core (β)
+    ('framework', 'Q-introduce_node',    'catalogue-introduces', NULL),
+    ('framework', 'Q-edge',              'catalogue-introduces', NULL),
+    ('framework', 'Q-kquery',            'catalogue-introduces', NULL),
+    -- CISC sugar
     ('framework', 'Q-introduce_object',  'catalogue-introduces', NULL),
     ('framework', 'Q-introduce_tension', 'catalogue-introduces', NULL),
     ('framework', 'Q-introduce_break',   'catalogue-introduces', NULL),
     ('framework', 'Q-witness',           'catalogue-introduces', NULL),
+    ('framework', 'Q-lineage_witness',   'catalogue-introduces', NULL),
     ('framework', 'Q-defer',             'catalogue-introduces', NULL),
     ('framework', 'Q-promote',           'catalogue-introduces', NULL),
     ('framework', 'Q-boundary',          'catalogue-introduces', NULL),
     ('framework', 'Q-refine',            'catalogue-introduces', NULL),
     ('framework', 'Q-load_extension',    'catalogue-introduces', NULL),
-    ('framework', 'Q-kquery',            'catalogue-introduces', NULL),
     ('framework', 'Q-tropical_min',      'catalogue-introduces', NULL),
     ('framework', 'Q-tropical_max',      'catalogue-introduces', NULL),
     ('framework', 'Q-check_closure',     'catalogue-introduces', NULL);

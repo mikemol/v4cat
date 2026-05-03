@@ -23,11 +23,16 @@ import sys
 import traceback
 
 from v4cat import SymmetryCatalogue
+from v4cat.bootstrap import (
+    RiscDisciplineViolation, check_risc_discipline,
+)
+from v4cat.cells import Cell, Kind
 from v4cat.curry import (
     AxisCutReferent, CellReferent, EdgeReferent,
     KqueryNode, LiteralReferent, Param, Tension,
     evaluate_tension,
 )
+from v4cat.theory import SIGNATURE, by_id
 
 
 # ============================================================
@@ -318,6 +323,86 @@ def test_evaluate_tension_missing_param_raises():
 
 
 # ============================================================
+# RISC discipline (S₄ closure-check strengthening)
+# ============================================================
+
+def test_risc_discipline_passes_for_current_signature():
+    """The framework's current SIGNATURE satisfies the RISC discipline:
+    every derives_from chain terminates in cells with derives_from=None."""
+    check_risc_discipline()  # raises if violated; pass = no exception
+
+
+def test_risc_core_has_no_derives_from():
+    """The three RISC primitives (introduce_node, edge, kquery) plus
+    the meta-cells (load_extension, check_closure, Q-supported-claims,
+    Q-bootstrap-closure) are roots — they declare derives_from=None."""
+    sig = by_id()
+    for risc_id in ('introduce_node', 'edge', 'kquery'):
+        cell = sig[risc_id]
+        assert cell.derives_from is None, (
+            f"RISC primitive {risc_id!r} should have derives_from=None"
+        )
+
+
+def test_cisc_cells_declare_reductions():
+    """Every CISC cell points at SIGNATURE roots reachable via the chain."""
+    sig = by_id()
+    cisc_expected = {
+        'introduce_break':   ('introduce_node',),
+        'introduce_object':  ('introduce_node', 'edge'),
+        'introduce_tension': ('introduce_node',),
+        'witness':           ('edge',),
+        'lineage_witness':   ('edge',),
+        'refine':            ('introduce_node', 'edge'),
+        'defer':             ('witness',),
+        'promote':           ('witness',),
+        'boundary':          ('witness',),
+        'tropical_min':      ('kquery',),
+        'tropical_max':      ('kquery',),
+    }
+    for cell_id, expected in cisc_expected.items():
+        cell = sig[cell_id]
+        assert cell.derives_from == expected, (
+            f"{cell_id!r} derives_from = {cell.derives_from!r}, "
+            f"expected {expected!r}"
+        )
+
+
+def test_risc_discipline_detects_dangling_ref():
+    """A SIGNATURE entry pointing at a non-existent cell raises."""
+    fake = Cell('fake-cisc', Kind.O, 'fake', derives_from=('not-in-sig',))
+    SIGNATURE.append(fake)
+    try:
+        check_risc_discipline()
+    except RiscDisciplineViolation as e:
+        assert ('fake-cisc', 'not-in-sig') in e.dangling
+    else:
+        raise AssertionError('expected RiscDisciplineViolation for dangling ref')
+    finally:
+        SIGNATURE.remove(fake)
+
+
+def test_risc_discipline_detects_cycle():
+    """A cycle in the derives_from graph raises."""
+    # Construct a 2-cell cycle: a → b → a
+    a = Cell('cyc-a', Kind.O, 'cyc a', derives_from=('cyc-b',))
+    b = Cell('cyc-b', Kind.O, 'cyc b', derives_from=('cyc-a',))
+    SIGNATURE.append(a)
+    SIGNATURE.append(b)
+    try:
+        check_risc_discipline()
+    except RiscDisciplineViolation as e:
+        # At least one of the two cells should be flagged as cyclic
+        assert e.cyclic, "expected at least one cyclic cell flagged"
+        assert any(c in ('cyc-a', 'cyc-b') for c in e.cyclic)
+    else:
+        raise AssertionError('expected RiscDisciplineViolation for cycle')
+    finally:
+        SIGNATURE.remove(a)
+        SIGNATURE.remove(b)
+
+
+# ============================================================
 # Test harness (matches existing convention)
 # ============================================================
 
@@ -337,6 +422,11 @@ ALL_TESTS = [
     test_evaluate_tension_axis_cut,
     test_evaluate_tension_cell_projection,
     test_evaluate_tension_missing_param_raises,
+    test_risc_discipline_passes_for_current_signature,
+    test_risc_core_has_no_derives_from,
+    test_cisc_cells_declare_reductions,
+    test_risc_discipline_detects_dangling_ref,
+    test_risc_discipline_detects_cycle,
 ]
 
 

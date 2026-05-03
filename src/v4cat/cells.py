@@ -17,6 +17,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from enum import Enum
+from typing import Optional
 
 
 class Kind(str, Enum):
@@ -46,11 +47,23 @@ class Cell:
 
     Cells are the units the closure check (Theorem 14.5) audits.
     Two cells are equal iff their ``id`` and ``kind`` match;
-    ``description`` is informational and ignored for hashing.
+    ``description`` and ``derives_from`` are informational and
+    ignored for hashing.
+
+    The ``derives_from`` field encodes the (β) RISC discipline:
+    cells with ``derives_from=None`` are RISC primitives
+    (irreducible at the framework level); cells with a non-None
+    ``derives_from`` are CISC/DERIVED — their semantics reduce to
+    a documented composition of the listed RISC cells. The
+    strengthened closure check (cotype/shadow_risc_core.md §
+    "Closure-check strengthening") verifies that every cell's
+    ``derives_from`` chain terminates in cells with
+    ``derives_from=None``.
     """
     id: str
     kind: Kind
     description: str = ''
+    derives_from: Optional[tuple[str, ...]] = None
 
     def __hash__(self) -> int:
         return hash((self.id, self.kind))

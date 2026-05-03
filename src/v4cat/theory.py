@@ -26,63 +26,86 @@ from .cells import Cell, Kind
 
 
 SIGNATURE: list[Cell] = [
-    # -----------------------------------------------------------------
-    # Object-introduction operations (kind O)
-    # -----------------------------------------------------------------
+    # =================================================================
+    # RISC core (β) — derives_from=None
+    #
+    # Three primitives, irreducible at the framework level.
+    # Everything else in this SIGNATURE has a derives_from chain
+    # that terminates here. See cotype/shadow_risc_core.md.
+    # =================================================================
+
+    Cell('introduce_node',    Kind.O,
+         'Universal node introduction (the RISC primitive); '
+         'dispatches over catalogued node-type.'),
+    Cell('edge',              Kind.W,
+         'Universal typed-edge introduction (the RISC primitive); '
+         'dispatches over catalogued edge-kind to witnesses or lineages.'),
+    Cell('kquery',            Kind.K,
+         'Klein-four read classifier (the universal read primitive)'),
+
+    # =================================================================
+    # CISC sugar — derives_from references the RISC reductions
+    # =================================================================
+
+    # Object-introduction (kind O) sugar
     Cell('introduce_object',  Kind.O,
-         'Add a witness-object to the catalogue'),
+         'CISC sugar: introduce_node(type=spec) + edge(...) for lineage',
+         derives_from=('introduce_node', 'edge')),
     Cell('introduce_tension', Kind.O,
-         'Add a structural tension'),
+         'CISC sugar: introduce_node(type=tension) with disposition=concern',
+         derives_from=('introduce_node',)),
 
-    # -----------------------------------------------------------------
-    # Break-introduction (kind B)
-    # -----------------------------------------------------------------
+    # Break-introduction (kind B) sugar
     Cell('introduce_break',   Kind.B,
-         'Introduce a new symmetry break'),
+         'CISC sugar: introduce_node(type=break)',
+         derives_from=('introduce_node',)),
 
-    # -----------------------------------------------------------------
-    # Witness operations (kind W)
-    # -----------------------------------------------------------------
+    # Witness operations (kind W) sugar
     Cell('witness',           Kind.W,
-         'Record a typed (subject, break, kind) edge'),
+         'CISC sugar: edge(...) with default scope=spec',
+         derives_from=('edge',)),
+    Cell('lineage_witness',   Kind.W,
+         'CISC sugar: edge(...) for spec-spec graph (lineage edges)',
+         derives_from=('edge',)),
     Cell('defer',             Kind.W,
-         'Witness shorthand for kind=deferred-candidate'),
+         'Orbit-element of witness with kind=deferred-candidate',
+         derives_from=('witness',)),
     Cell('promote',           Kind.W,
-         'Witness shorthand for kind=confirms (promotion)'),
+         'Orbit-element of witness with kind=confirms (promotion)',
+         derives_from=('witness',)),
     Cell('boundary',          Kind.W,
-         'Witness shorthand for kind=sibling-boundary'),
+         'Orbit-element of witness with kind=sibling-boundary',
+         derives_from=('witness',)),
 
-    # -----------------------------------------------------------------
-    # Refinement (kind R)
-    # -----------------------------------------------------------------
+    # Refinement (kind R) sugar — the principal RISC composition
     Cell('refine',            Kind.R,
-         'Annotate a (break, spec) edge with a named refinement'),
+         'CISC sugar: introduce_node(child-break) + edge(origin) + edge(refines)',
+         derives_from=('introduce_node', 'edge')),
 
-    # -----------------------------------------------------------------
-    # Schema extension (kind E)
-    # -----------------------------------------------------------------
+    # Schema extension (kind E) — substrate-coupled, not RISC-reducible
     Cell('load_extension',    Kind.E,
          'Load a domain-specific schema/data extension'),
 
-    # -----------------------------------------------------------------
-    # Read primitives (kind K)
-    # -----------------------------------------------------------------
-    Cell('kquery',            Kind.K,
-         'Klein-four read classifier (the universal read primitive)'),
+    # Read sugar (kind K) — orbit-elements of kquery sweeps
     Cell('tropical_min',      Kind.K,
-         'Generic tropical-MIN over an ordered column'),
+         'Orbit-element of kquery: sweep over ordered axis (MIN direction)',
+         derives_from=('kquery',)),
     Cell('tropical_max',      Kind.K,
-         'Generic tropical-MAX over an ordered column'),
+         'Orbit-element of kquery: sweep over ordered axis (MAX direction)',
+         derives_from=('kquery',)),
 
-    # -----------------------------------------------------------------
+    # =================================================================
     # Closure check (kind X)
-    # -----------------------------------------------------------------
-    Cell('check_closure',     Kind.X,
-         'Self-hosting closure check (Theorem 14.5)'),
+    # =================================================================
 
-    # -----------------------------------------------------------------
+    Cell('check_closure',     Kind.X,
+         'Self-hosting closure check (Theorem 14.5) — strengthened in S₄ '
+         'to also verify derives_from chains terminate in RISC cells'),
+
+    # =================================================================
     # Bootstrap breaks (kind B; recursion clauses 2 and 3 of Def 14.7)
-    # -----------------------------------------------------------------
+    # =================================================================
+
     Cell('Q-supported-claims',  Kind.B,
          'Scope declaration for the closure check'),
     Cell('Q-bootstrap-closure', Kind.B,

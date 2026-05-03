@@ -54,6 +54,39 @@ class SelfHostingViolation(Exception):
         )
 
 
+class RiscDisciplineViolation(Exception):
+    """Raised when a SIGNATURE cell's ``derives_from`` chain is invalid.
+
+    Per cotype/shadow_risc_core.md, the (β) discipline requires:
+
+    - RISC cells (introduce_node, edge, kquery, plus closure-check
+      meta-cells) have ``derives_from=None``
+    - CISC / DERIVED cells have ``derives_from`` referencing other
+      SIGNATURE cells, with chains that terminate in RISC cells
+
+    The exception payload distinguishes:
+
+    - ``dangling`` (cell_id, missing_ref) — derives_from points at a
+      cell id that's not in SIGNATURE
+    - ``cyclic`` (cell_id) — derives_from chain contains a cycle, so
+      it doesn't terminate in RISC
+    """
+
+    def __init__(
+        self,
+        dangling: list[tuple[str, str]],
+        cyclic: list[str],
+    ):
+        self.dangling = list(dangling)
+        self.cyclic = list(cyclic)
+        super().__init__(
+            f"RISC discipline violated (S₄ strengthening):\n"
+            f"  dangling refs (cell, missing-id): {sorted(self.dangling)!r}\n"
+            f"  cyclic chains (cell ids): {sorted(self.cyclic)!r}\n"
+            f"See cotype/shadow_risc_core.md § 'Closure-check strengthening'."
+        )
+
+
 # -----------------------------------------------------------------------------
 # IMPL and CAT predicates
 # -----------------------------------------------------------------------------
@@ -181,17 +214,72 @@ def enumerate_supported_cells(cat) -> Tuple[set[str], set[str]]:
 # The closure check
 # -----------------------------------------------------------------------------
 
+def check_risc_discipline() -> None:
+    """S₄ strengthening: verify every SIGNATURE cell's
+    ``derives_from`` chain terminates in RISC cells.
+
+    Per cotype/shadow_risc_core.md, the (β) RISC discipline holds
+    iff:
+
+    - RISC cells have ``derives_from=None`` and act as roots
+    - Every CISC / DERIVED cell's ``derives_from`` references
+      cells present in SIGNATURE (no dangling refs)
+    - Every chain terminates (no cycles)
+
+    Raises :class:`RiscDisciplineViolation` if any chain is
+    invalid. Substrate-independent — operates only on
+    :data:`SIGNATURE` (Python data); does not consult the
+    catalogue.
+    """
+    sig_index = by_id()
+    dangling: list[tuple[str, str]] = []
+    cyclic: list[str] = []
+
+    for cell in SIGNATURE:
+        if cell.derives_from is None:
+            continue
+        # BFS/DFS the chain; detect dangling refs and cycles
+        visited: set[str] = {cell.id}
+        frontier = list(cell.derives_from)
+        while frontier:
+            ref_id = frontier.pop()
+            if ref_id not in sig_index:
+                dangling.append((cell.id, ref_id))
+                continue
+            if ref_id in visited:
+                if cell.id not in cyclic:
+                    cyclic.append(cell.id)
+                continue
+            visited.add(ref_id)
+            ref_cell = sig_index[ref_id]
+            if ref_cell.derives_from is not None:
+                frontier.extend(ref_cell.derives_from)
+
+    if dangling or cyclic:
+        raise RiscDisciplineViolation(dangling=dangling, cyclic=cyclic)
+
+
 def check_closure(cat) -> Optional[dict]:
-    """Run the self-hosting closure check (Theorem 14.5).
+    """Run the self-hosting closure check (Theorem 14.5, S₄-strengthened).
+
+    Two checks now run:
+
+    1. **RISC discipline** (S₄): every SIGNATURE cell's
+       ``derives_from`` chain terminates in RISC cells. Raises
+       :class:`RiscDisciplineViolation` if violated.
+    2. **IMPL ↔ CAT closure** (Theorem 14.5 original): the
+       closure kquery's gap is empty. Raises
+       :class:`SelfHostingViolation` if ``gap.10`` or ``gap.01``
+       is non-empty.
 
     Reads ``Q-supported-claims`` from the catalogue. If absent,
     returns None (the catalogue isn't framework-bootstrapped; no
-    check applies). Otherwise computes the closure kquery; if
-    ``gap`` is non-empty, raises :class:`SelfHostingViolation`.
-
-    On pass, returns the kquery result dict
+    check applies). On pass, returns the kquery result dict
     ``{'00': [...], '01': [...], '10': [...], '11': [...]}``.
     """
+    # S₄ strengthening — RISC discipline check (substrate-independent)
+    check_risc_discipline()
+    # Original Theorem 14.5 closure check
     result = closure_status(cat)
     if result is None:
         return None
@@ -228,8 +316,8 @@ def closure_status(cat) -> Optional[dict]:
 
 
 __all__ = [
-    'SelfHostingViolation',
+    'SelfHostingViolation', 'RiscDisciplineViolation',
     'IMPL', 'CAT',
     'supported_kinds', 'enumerate_supported_cells',
-    'check_closure', 'closure_status',
+    'check_risc_discipline', 'check_closure', 'closure_status',
 ]
