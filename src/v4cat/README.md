@@ -2,6 +2,8 @@
 
 > *Grade: quick-start (one-page survey).
 > Deeper: [tutorial.md](src/v4cat/tutorial.md) (worked walk-through), then [methodology.md](src/v4cat/methodology.md) (operational design), then [theory.md](src/v4cat/theory.md) (foundations).
+> Operating: [rigorous_use.md](src/v4cat/rigorous_use.md) (the user-facing covenant), [python_api.md](src/v4cat/python_api.md) (non-MCP API discipline).
+> Hosted skills: [hosted_skills.md](src/v4cat/hosted_skills.md) (DBE/RFS/S2G/shadow-architecture as v4cat-hosted frameworks), [hosted_skill_usage.md](src/v4cat/hosted_skill_usage.md) (per-region operating manual).
 > Architectural detail: [cotype/](cotype/).*
 
 A Python ISA + SQLite schema + MCP server for accumulating named
@@ -43,6 +45,10 @@ v4cat/
 ├── theory.md                foundations — shadow architecture, Klein-four, Yoneda+Derrida, magma+pointfree, Theorem 14.5
 ├── tutorial.md              LLM-friendly walk-through, empty → small worked domain
 ├── examples.md              domain templates (languages, processors, crypto, …)
+├── rigorous_use.md          user-facing operating covenant — using v4cat as rigorously as v4cat uses itself
+├── python_api.md            non-MCP API discipline — RISC/CISC strata, kquery + tension patterns
+├── hosted_skills.md         hosting the four shadow-architecture skills (DBE/RFS/S2G/shadow-architecture) as v4cat-framework objects
+├── hosted_skill_usage.md    per-region operating manual for the hosted skills — fire classification, kquery audit, residue actions
 ├── mcp_setup.md             wire the MCP server into VS Code, Claude Desktop, Claude Code, Codex
 ├── README.md                this file
 ├── pyproject.toml           pip-installable package metadata
@@ -54,8 +60,9 @@ v4cat/
 
 ## Documentation
 
-The framework is documented at five levels of depth, plus a
-setup guide:
+The framework is documented at five levels of depth, plus five
+operational guides (MCP setup, Python API discipline, rigorous
+use, hosted-skills design, hosted-skill usage):
 
 - **`README.md`** (this file): quick start. Installation, layout,
   first commands.
@@ -75,19 +82,37 @@ setup guide:
 - **`examples.md`**: domain templates — programming languages,
   cryptographic primitives, databases, file systems, network
   protocols, mathematical structures, OS designs, ML architectures.
+- **`rigorous_use.md`**: the user-facing operating covenant —
+  declaring `U`, treating every claim as needing a carrier,
+  preserving the four cells, and using v4cat as rigorously as v4cat
+  uses itself.
+- **`python_api.md`**: non-MCP API discipline — RISC/CISC strata,
+  `kquery` + `Tension` patterns, lifecycle as witnesses,
+  `load_extension()` shape, snapshot comparisons.
+- **`hosted_skills.md`**: the hosted-framework contract — making
+  the four shadow-architecture skills (DBE, RFS, S2G,
+  shadow-architecture) into v4cat objects whose claims, firing
+  rules, intervention steps, products, residues, and closure
+  obligations are themselves catalogued and kquery-auditable.
+- **`hosted_skill_usage.md`**: the per-region operating manual for
+  the hosted skills — work-fire as the unit of use, eight worked
+  examples (one per lattice region, including the two forbidden
+  ones), and the orbit-saturation guard.
 - **`cotype/`**: the shadow library — the authoritative source for
   architectural commitments (RISC reframe, migration history,
   doc-discipline, RFS findings, snap reports). Deep readers should
   follow this thread; the user-facing docs above reference it where
   architectural detail exceeds doc grade.
 
-All six user-facing files are exposed as MCP resources at
+All ten user-facing files are exposed as MCP resources at
 `catalogue://readme`, `catalogue://mcp_setup`,
 `catalogue://tutorial`, `catalogue://methodology`,
-`catalogue://theory`, and `catalogue://examples`. There's also
-`catalogue://docs` — an index resource that lists everything
-available, suitable as the entry point for an LLM encountering
-the framework.
+`catalogue://theory`, `catalogue://examples`,
+`catalogue://rigorous_use`, `catalogue://python_api`,
+`catalogue://hosted_skills`, and `catalogue://hosted_skill_usage`.
+There's also `catalogue://docs` — an index resource that lists
+everything available, suitable as the entry point for an LLM
+encountering the framework.
 
 ## Quick start
 
