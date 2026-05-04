@@ -257,6 +257,24 @@ of v4cat to v4cat.
   shadow_risc_core. No prior shadow is invalidated; the catalogue
   thickens forward.
 
+- [shadow_carrier_grid.md](shadow_carrier_grid.md) — names the
+  (depth × substrate) carrier grid. Vertical axis: projection-depth
+  (operation-log < snapshot < V₄-cover < residue). Horizontal
+  axis: substrate (JSON × RDF × …). Two columns now filled:
+  [v4cat-oss/vcif](https://github.com/v4cat-oss/vcif) (JSON) and
+  [v4cat-oss/vcif-rdf](https://github.com/v4cat-oss/vcif-rdf)
+  (RDF/SHACL/SPARQL). v4cat sits at the centre as the universal;
+  every grid cell is a co-projection of v4cat parameterised by
+  (depth, substrate). Per discipline rule 6: no `Carrier` wrapper
+  extracted at any number of filled cells.
+
+- [shadow_event_log_gap.md](shadow_event_log_gap.md) — promissory
+  cell. v4cat does not yet expose an explicit event-log API;
+  the patch profile (in vcif and vcif-rdf) is therefore
+  theoretically group-faithful but operationally downgraded until
+  the event-log surface ships. Region #4 (S2G alone) — registers
+  the gap, no v4cat code change this turn.
+
 ## Composition
 
 The shadows compose under **Theorem 14.5's preservation theorem**:
