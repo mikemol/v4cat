@@ -30,6 +30,7 @@ and pick up the operational details later.
 12. [Trace-thickening: the catalogue moves forward, not back](#12-trace-thickening-the-catalogue-moves-forward-not-back)
 13. [What the framework rules out](#13-what-the-framework-rules-out)
 14. [Self-hosting closure via level-blind kquery](#14-self-hosting-closure-via-level-blind-kquery)
+15. [Group-theoretic reading: v4cat as free-abelian assertion-history group action](#15-group-theoretic-reading-v4cat-as-free-abelian-assertion-history-group-action)
 
 ---
 
@@ -1864,6 +1865,675 @@ itself — the closure check names it, by passing.
 
 ---
 
+## 15. Group-theoretic reading: v4cat as free-abelian assertion-history group action
+
+§ 4 introduces the Klein-four group `V₄` as the read primitive. § 14
+strengthens the framework's self-hosting check using `V₄`-cell partition
+language. This section gives the algebraic basis under both: v4cat is a
+*free-abelian assertion-history group action whose observable states are
+V₄-audited quotients*. The slogan, compactly: **RISC writes are
+translations; kquery is the V₄ coordinate chart.**
+
+The proper reading is:
+
+> v4cat is not a group action on the collapsed current database.
+> It is a group action on the history / assertion fiber whose observable
+> catalogue state is a quotient, support, or modal slice of that action.
+
+That shift is necessary. On the visible catalogue alone, these are not
+all group actions:
+
+```text
+introduce_node(x)
+edge(s,k,t)
+```
+
+because ordinary "introduce" is monotone and idempotent. Once a node
+exists, introducing it again does not visibly move the state, and there
+is no public inverse. But on the **event/history level**, each
+introduction is a translation by a generator. Its inverse is not "delete
+from the database"; it is the modal inverse along the event/history axis.
+
+```text
+RISC operation as public API:
+  monotone/idempotent catalogue update
+
+RISC operation as group action:
+  translation in a free assertion-history group
+
+visible catalogue:
+  quotient/projection/support of that history
+```
+
+That is the clean group-theoretic reading.
+
+### 15.1 The ambient assertion group
+
+Let there be an ambient set of possible v4cat assertions:
+
+```text
+𝔄 = 𝔄_node ⊔ 𝔄_edge ⊔ 𝔄_cover ⊔ 𝔄_residue ⊔ ...
+```
+
+where:
+
+```text
+𝔄_node contains symbols Nₓ
+  meaning "node x has been asserted"
+
+𝔄_edge contains symbols Eₛ,ₖ,ₜ
+  meaning "edge assertion source=s, kind=k, target=t has been asserted"
+```
+
+Then define the assertion-history group:
+
+```text
+H = ℤ^(𝔄)
+```
+
+or, if you want parity/toggle semantics:
+
+```text
+H₂ = 𝔽₂^(𝔄)
+```
+
+For append-only catalogue history, `ℤ^(𝔄)` is better: it remembers
+multiplicity, inverse motion, and audit lineage. The visible catalogue
+is then a projection:
+
+```text
+π : H → CatalogueState
+```
+
+where, roughly:
+
+```text
+π(h) contains assertion a iff h(a) > 0
+```
+
+or some stricter support rule. The point: the group action is on `H`;
+v4cat's visible state is a quotient of `H`.
+
+### 15.2 `introduce_node` as a group action
+
+For every possible node identifier `x`, there is a generator `Nₓ ∈
+𝔄_node`. Define an action of `ℤ` on `H`:
+
+```text
+αₓ(n, h) = h + n·Nₓ
+```
+
+The public operation `cat.introduce_node(x, label, kind)` (see
+`catalogue.py:348`) is the positive unit action:
+
+```text
+αₓ(1, h) = h + Nₓ
+```
+
+The inverse:
+
+```text
+αₓ(-1, h) = h - Nₓ
+```
+
+is not necessarily exposed as "delete node." It is a modal inverse in
+the history group. The visible API is monotone, but the underlying
+action is group-theoretic:
+
+```text
+introduce_node(x) = translation by Nₓ in the node-assertion fiber.
+```
+
+### 15.3 `edge` as a group action
+
+Likewise, every possible edge assertion has a generator:
+
+```text
+Eₛ,ₖ,ₜ
+```
+
+where `s`, `k`, and `t` are all nodes. Important: `k` is not a
+first-class property. It is just the middle node occupying the
+edge-kind slot.
+
+So `cat.edge(s, k, t)` (see `catalogue.py:474`) is:
+
+```text
+βₛ,ₖ,ₜ(1, h) = h + Eₛ,ₖ,ₜ
+```
+
+with inverse:
+
+```text
+βₛ,ₖ,ₜ(-1, h) = h - Eₛ,ₖ,ₜ
+```
+
+Again, the inverse is modal/history-level, not necessarily a public
+deletion operation. This preserves the v4cat ontology:
+
+```text
+edge kind is not an RDF/RDBMS/property primitive;
+edge kind is a node participating in the same assertion group.
+```
+
+So "has-kind" itself is just a node `has-kind`, and the assertion `x
+--has-kind--> K` is the group generator `Eₓ,has-kind,K`. No special
+property layer is needed.
+
+### 15.4 The visible catalogue is a quotient of the action
+
+The public catalogue is not the group itself. It is the support /
+projection of the group history. This explains idempotence.
+
+If:
+
+```text
+h₁ = h + Nₓ
+h₂ = h + 2Nₓ
+```
+
+then both may project to the same visible catalogue state:
+
+```text
+π(h₁) = π(h₂)
+```
+
+because both say "node x is present." That means **idempotence is not
+primitive. It is a quotient artifact**.
+
+```text
+group history:
+  repeated introduction is distinct
+
+visible catalogue:
+  repeated introduction may collapse
+```
+
+This is exactly the discipline § 12 (trace-thickening) names: do not
+confuse the unquotiented object with its projection. The catalogue
+moves forward not because operations are intrinsically irreversible,
+but because the projection π selects the forward-monotone facet.
+
+### 15.5 `kquery` as the V₄ action / coordinate transform
+
+§ 4 shows that kquery returns a four-cell partition under `V₄ ≅ 𝔽₂ ×
+𝔽₂`. Here is the group-theoretic strengthening.
+
+For a declared universe `U` and two observer predicates or sets `A, B
+⊆ U`, define:
+
+```text
+χ₍A,B₎ : U → V₄
+χ₍A,B₎(u) = (χ_A(u), χ_B(u))
+```
+
+The four fibers are exactly:
+
+```text
+χ⁻¹(11) = A ∩ B
+χ⁻¹(10) = A ∖ B
+χ⁻¹(01) = B ∖ A
+χ⁻¹(00) = U ∖ (A ∪ B)
+```
+
+The group-theoretic fact is:
+
+```text
+𝒫(U) × 𝒫(U)
+  ≅
+(𝔽₂^U) × (𝔽₂^U)
+  ≅
+(𝔽₂ × 𝔽₂)^U
+  ≅
+V₄^U
+```
+
+under symmetric difference. So `kquery` is not merely a report. It is
+the **coordinate chart** that identifies a pair of observers with a
+`V₄`-valued function over `U`.
+
+The observer-toggle group is:
+
+```text
+O_U = 𝒫(U) × 𝒫(U) ≅ V₄^U
+```
+
+and it acts on observer pairs by symmetric difference:
+
+```text
+(D_A, D_B) · (A, B) = (A △ D_A, B △ D_B)
+```
+
+Under `χ`, this is pointwise V₄ translation:
+
+```text
+χ₍A△D_A, B△D_B₎(u) = χ₍A,B₎(u) + χ₍D_A,D_B₎(u)
+```
+
+So `kquery` is **equivariant** with respect to the V₄ action. The clean
+reading:
+
+```text
+kquery is the V₄-coordinate decomposition of the observer-pair group action.
+```
+
+The four returned sets are not arbitrary result buckets. They are the
+fibers of the `V₄`-valued orbit coordinate.
+
+### 15.6 If `kquery` materializes results, it is also a translation
+
+If `kquery` is read-only, then it is an equivariant coordinate map.
+
+If `kquery` materializes a cover into the catalogue (cf. vcif's
+`v4cat.closure-report` profile, `expectation` records), then it also
+has a history-action reading.
+
+Let `Q₍U,A,B₎` be the assertion payload:
+
+```text
+cover node
+cell nodes
+cell-membership edges
+derivation provenance
+residue actions
+```
+
+Then materializing the query is:
+
+```text
+γ₍U,A,B₎(1, h) = h + Q₍U,A,B₎(π(h))
+```
+
+This is state-dependent, because the query result depends on the
+catalogue state. To make this a genuine invertible action, the event
+log must retain the exact materialized payload:
+
+```text
+event:
+  query frame = (U, A, B)
+  input state hash
+  materialized cover payload
+```
+
+Then the inverse is:
+
+```text
+remove/retract exactly that materialized payload along the query-event axis
+```
+
+Again, the inverse is modal/history-level. It is not "the query was
+false." It is "step back before that query materialization."
+
+### 15.7 The total RISC group
+
+Ignoring materialized query payloads for a moment, the mutation group
+is:
+
+```text
+G_mut = ℤ^(𝔄_node ⊔ 𝔄_edge)
+```
+
+acting on histories by translation. For a fixed query universe `U`,
+the observer group is:
+
+```text
+G_query(U) = V₄^U
+```
+
+acting on observer frames. Identifier renamings also act. Let `Σ` be
+a group of permitted bijections of identifiers. Then:
+
+```text
+σ · Nₓ = N_{σx}
+σ · Eₛ,ₖ,ₜ = E_{σs,σk,σt}
+```
+
+So the fuller group is a semidirect product:
+
+```text
+G ≈ ℤ^(𝔄_node ⊔ 𝔄_edge ⊔ 𝔄_cover) ⋊ Σ
+```
+
+with query-frame groups `V₄^U` living fiberwise over declared
+universes. More honestly:
+
+```text
+v4cat is a fibration of group actions over scopes/universes.
+```
+
+Each declared universe `U` has its own observer-toggle group `V₄^U`,
+and each catalogue history has its assertion-translation group `ℤ^𝔄`.
+
+### 15.8 Why this is more naturally a groupoid
+
+Strictly speaking, because v4cat operations are typed and scoped (per
+§ 14.5's closure-scope discipline), the most exact object is often a
+**groupoid**, not one global group.
+
+For example, `edge(s, k, t)` is well-formed only when the relevant
+endpoint/kind nodes are available or can be saturated. A fixed ambient
+universe makes the action total — all possible nodes and edges already
+exist as possible generators — but if you insist on operating only
+inside currently valid catalogue states, then operations are partial.
+
+Partial typed invertible operations form a groupoid:
+
+```text
+objects:
+  valid catalogue contexts / scopes
+
+arrows:
+  modal RISC actions and their inverses
+
+composition:
+  event composition when source/target contexts match
+```
+
+So the maximally honest statement is:
+
+```text
+Globally, v4cat has a free assertion-history group action on an ambient
+space of possible assertions.
+
+Internally, over well-formed scoped catalogue states, the same structure
+appears as an action groupoid.
+```
+
+That is the proper group-theoretic reading.
+
+### 15.9 The arrow-category lift
+
+Connect this to the recursive-schema reading of § 9.
+
+An edge assertion is not merely a tuple. It is an arrow-like object:
+
+```text
+s --k--> t
+```
+
+But `k` is itself a node, so the arrow is more accurately an incidence
+object `Eₛ,ₖ,ₜ`. A renaming group `Σ` acts on the underlying object
+universe, and this action lifts to arrows:
+
+```text
+σ · (s --k--> t) = σs --σk--> σt
+```
+
+This is the standard lift from objects to the arrow category `C →
+Arr(C)`. In v4cat language: any symmetry of nodes induces a symmetry
+of edge assertions. And because edge kinds are nodes, property /
+kind / status vocabulary is transported by the same group action as
+ordinary domain objects. There is no separate predicate-symmetry layer.
+
+### 15.10 How `kind` becomes recursively group-theoretic
+
+A kind assertion `x has-kind K` is just `Eₓ,has-kind,K`. The node
+`has-kind` itself can be typed:
+
+```text
+has-kind has-kind EdgeKind
+```
+
+which is `E_has-kind,has-kind,EdgeKind`. And `Kind` can be recursively
+hosted:
+
+```text
+Kind has-kind Kind
+```
+
+which is `E_Kind,has-kind,Kind`. All of these are elements of the same
+assertion basis `𝔄_edge` (compare § 14.5.5's framework_seed.sql, where
+the framework's own primitives are catalogued through the same edge
+table that catalogues domain-level relations).
+
+So the group action does not distinguish:
+
+```text
+ordinary domain edge
+kind edge
+property edge
+carrier-slot edge
+framework-claim edge
+```
+
+They are all translations by edge-assertion generators. That is the
+exact group-theoretic counterpart of:
+
+```text
+there are no first-class properties in v4cat.
+```
+
+A property-like thing is a node whose orbit/occupancy under the
+edge-kind slot makes it behave property-like (cf.
+`cotype/shadow_kquery_orbit.md`).
+
+### 15.11 What the three RISC operations become
+
+Compactly, restating what `cotype/shadow_risc_core.md` documents
+under the algebraic frame:
+
+#### `introduce_node`
+
+```text
+group:
+  ℤ generated by Nₓ
+
+action:
+  h ↦ h + Nₓ
+
+visible effect:
+  node x appears in support π(h)
+```
+
+#### `edge`
+
+```text
+group:
+  ℤ generated by Eₛ,ₖ,ₜ
+
+action:
+  h ↦ h + Eₛ,ₖ,ₜ
+
+visible effect:
+  edge assertion s --k--> t appears in support π(h)
+```
+
+#### `kquery`
+
+There are two levels:
+
+```text
+read-level:
+  equivariant V₄-coordinate map
+  (A, B) ↦ χ₍A,B₎ : U → V₄
+
+observer-action level:
+  V₄^U acts on observer pairs by pointwise symmetric difference
+
+materialization level:
+  translation by the generated cover/cell assertion payload
+```
+
+So:
+
+```text
+kquery is the action/read interface of V₄^U over observer frames.
+```
+
+or:
+
+```text
+kquery exposes the orbit coordinate of the observer-pair action.
+```
+
+### 15.12 Why the four cells are group-theoretic, not logical
+
+This reading avoids the Belnap trap that § 13 ("What the framework
+rules out") gestures at. The cells are not primarily truth values.
+They are group coordinates.
+
+Given `A, B ⊆ U`, the pair `(A, B)` is an element of `𝒫(U) × 𝒫(U)`
+under symmetric difference. But this group is isomorphic to `V₄^U`. So
+each element `u ∈ U` receives a `V₄` coordinate `00, 01, 10, 11`. The
+four sets are the fibers of that coordinate map.
+
+Thus:
+
+```text
+10 and 01 survive because kquery returns the unquotiented V₄ fiber cover.
+```
+
+Only later may you quotient `10 ∪ 01 = ordinary difference`. That
+quotient is not group-primitive. It is a projection from the
+V₄-coordinate representation.
+
+### 15.13 Modal time axes
+
+§ 12's trace-thickening reading is clarified here as a modal axis on
+the action.
+
+A mutation can be represented as:
+
+```text
+h_t --g--> h_{t+1}
+```
+
+where `g ∈ G_mut`. The inverse is:
+
+```text
+h_{t+1} --g⁻¹--> h_t
+```
+
+But the public catalogue may only expose the forward temporal
+modality:
+
+```text
+◇⁺ introduce_node
+◇⁺ edge
+◇⁺ materialize_cover
+```
+
+while inverse movement is retained in the event/history category:
+
+```text
+◇⁻ retract event
+◇⁻ replay prior state
+◇⁻ inspect predecessor
+```
+
+So a mutation is group-theoretic at the modal/event level, even when
+the public state-transition API is monotone. This is the same
+distinction as:
+
+```text
+proof history vs normalized theorem
+event log vs current projection
+unquotiented cover vs projected report
+```
+
+### 15.14 The most compact formal statement
+
+> Let `𝔄` be the set of all possible v4cat assertion atoms, including
+> node assertions and ternary edge assertions. The assertion-history
+> space is `H = ℤ^(𝔄)`, acted on by the free abelian assertion group
+> by translation. The visible catalogue is a support/projection
+> `π(H)`.
+>
+> For every declared universe `U`, observer pairs `(A, B)` form the
+> group `𝒫(U) × 𝒫(U)` under symmetric difference, canonically
+> isomorphic to `V₄^U`. The operation `kquery(A, B; U)` returns the
+> fiber decomposition of the corresponding `V₄`-valued coordinate
+> `χ₍A,B₎ : U → V₄`.
+>
+> Thus `introduce_node` and `edge` are assertion translations, while
+> `kquery` is the `V₄`-equivariant observer-coordinate action;
+> materialized kqueries are again translations by cover/cell assertion
+> payloads. Since well-formed catalogue states are scoped and typed,
+> the internal version is an action groupoid; the ambient version is a
+> group action.
+
+That is the proper group-theoretic reading.
+
+### 15.15 Consequences
+
+#### A. Idempotence is a quotient, not a primitive law
+
+Repeated introduction collapses only after projecting history to
+visible support. The append-only schema discipline in `methodology.md`
+is a consequence of `π` being a support map, not a primitive axiom.
+
+#### B. Deletion is not required
+
+Inverses exist as modal/history inverses, not necessarily as public
+destructive operations. `defer/promote/boundary` (the
+spec-lifecycle verbs) are not deletions; they are moves along the
+history-modal axis that the projection happens to expose.
+
+#### C. Kinds and properties are not special
+
+They are nodes and edge assertions acted on by the same group. No
+RDF/RDBMS first-class-property layer is required, and any carrier
+that introduces such a layer is leaking discipline (cf. v4cat-mcp
+and vcif-rdf carrier-vs-object discipline).
+
+#### D. `kquery` is not a diff
+
+It is the V₄-coordinate chart of the observer-pair action. Symmetric
+difference is one named projection of it (`10 ∪ 01`), but the
+unquotiented V₄ form is the primitive — see § 4.
+
+#### E. Recognizers should preserve equivariance
+
+A recognizer should commute with relabeling:
+
+```text
+recognize(σ · C) = σ · recognize(C)
+```
+
+If a recognizer fails that, it is smuggling in non-structural
+information. This is a precise structural test for vcif's
+`v4cat.recognizer-package` profile soundness.
+
+#### F. Self-hosting is group-completion closure
+
+The framework's own claims are assertion atoms; its own closure query
+(§ 14.5's `ClosureKQ`) is a V₄-coordinate check over those atoms. So
+self-hosting is not merely reflective documentation. It is:
+
+```text
+the framework's own assertion-history orbit being readable under its
+own V₄ observer-coordinate action.
+```
+
+### 15.16 The slogan
+
+The clean slogan is:
+
+> **v4cat is a free assertion-history group action whose observable
+> states are V₄-audited quotients.**
+
+Or, even tighter:
+
+> **RISC writes are translations; kquery is the V₄ coordinate chart.**
+
+That gives all three RISC operations as group-theoretic:
+
+```text
+introduce_node:
+  translate by a node assertion generator
+
+edge:
+  translate by a ternary edge assertion generator
+
+kquery:
+  act/read through the V₄^U observer group, returning the unquotiented
+  fiber cover; if materialized, translate by the cover assertion payload
+```
+
+---
+
 *See also: `methodology.md` (the operational design),
 `tutorial.md` (LLM-friendly walk-through),
-`examples.md` (domain templates), `README.md` (quick-start).*
+`examples.md` (domain templates), `README.md` (quick-start),
+`cotype/shadow_assertion_history_group.md` (the structural shadow
+companion to § 15).*

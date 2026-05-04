@@ -116,3 +116,19 @@ re-derivation:
   the SymmetryCatalogue methods, only now from a different package.
 
 No prior shadow is invalidated; the catalogue thickens forward.
+
+## Algebraic anchor (2026-05-04 cont'd)
+
+Re-read under
+[shadow_assertion_history_group.md](shadow_assertion_history_group.md):
+v4cat-mcp is the **forward-modal facet of the assertion-translation
+group, exposed over RPC**. Each MCP tool is a single ◇⁺ move on `H`
+(introduce_node/edge translations) or a V₄-chart read (kquery
+tools). The catalogue's identity is preserved across the seam
+*because* the seam runs at the public-monotone facet — the same
+facet v4cat itself exposes — not at a deeper layer that would
+require access to history-modal inverses. The "presentations are
+identity-preserving" entailment is the operational consequence of
+identity (E) in shadow_assertion_history_group.md (recognizers
+preserve equivariance; presentations preserve identity). See
+[theory.md § 15.13](../src/v4cat/theory.md) on modal time axes.

@@ -63,3 +63,18 @@ domain views are a parallel L3', and the closure check still
 runs at L5 because supported_kinds is data, not code.
 [README.md:144-152](../README.md#L144-L152) describes this
 extension protocol.
+
+## Algebraic anchor (2026-05-04 cont'd)
+
+Re-read under
+[shadow_assertion_history_group.md](shadow_assertion_history_group.md):
+L0 (kquery) is the **V₄-coordinate-chart layer** of the
+observer-pair group action; everything above L0 is a downstream
+projection or further-quotient of that chart. L1 (schema.sql)
+admits the basis `𝔄_node ⊔ 𝔄_edge` over which `H = ℤ^𝔄` is
+constructed; L2 (ISA verbs) is the forward-monotone facet of
+group translation; L5 (closure check) is the V₄-coordinate audit
+of the framework's own self-hosting orbit (Theorem 14.5
+strengthens to: gap = ∅ iff the framework's assertion-history is
+visible under its own observer-coordinate action). See
+[theory.md § 15](../src/v4cat/theory.md), especially § 15.5 and § 15.15.F.

@@ -160,3 +160,31 @@ the second of a pair. Future fires on a third presentation would:
 The catalogue knows in advance what the universal *will* look like:
 "P depends-on v4cat; v4cat does not depend on P; identity preserved."
 What it doesn't know is how many such P will exist. Two so far.
+
+## Algebraic anchor (2026-05-04 cont'd)
+
+Re-read under
+[shadow_assertion_history_group.md](shadow_assertion_history_group.md):
+**vcif's six profiles factor along a projection-depth axis** rooted
+in the assertion-history group `H = ℤ^𝔄`. The profiles, ordered by
+distance from `H`:
+
+| Profile | Group-theoretic content |
+|---|---|
+| `v4cat.patch` | `h ∈ H` itself — the operation-log carrier; group-faithful, invertible |
+| `v4cat.snapshot` | `π(h)` — the visible support quotient; idempotent |
+| `v4cat.closure-report` | `χ_{A,B}(π(h))` — the V₄ coordinate decomposition |
+| `v4cat.residue-report` | a further named projection of cell members |
+
+The two operator/signature profiles (`v4cat.vocabulary` declaring
+`𝔄` and `v4cat.recognizer-package` declaring tensions) are not on
+the projection-depth axis; they declare the basis and the
+recognizer-action layer. Carriers (vcif, vcif-rdf, future) are
+**substrate columns** — each substrate replicates the same
+projection-depth axis. The "siblings, not parent/child" reading
+above is correct in the sense that JSON is not canonical; the
+"co-projections sharing a kernel" reading is correct in the sense
+that every carrier pulls in v4cat. Both are subsumed by the
+algebraic reading: carriers are projections of `H` at various
+depths, instantiated in various substrates. See
+[theory.md § 15](../src/v4cat/theory.md), § 15.4, and § 15.13.

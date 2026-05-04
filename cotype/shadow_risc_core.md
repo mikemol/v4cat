@@ -485,3 +485,26 @@ The framework's design intent — "v4cat's deliverable IS the
 application of v4cat to v4cat" (theory.md § 14) — finds its
 maximally compressed form in this shadow. Three primitives;
 everything else is data.
+
+## Algebraic anchor (2026-05-04 cont'd)
+
+Re-read under
+[shadow_assertion_history_group.md](shadow_assertion_history_group.md):
+the three RISC primitives are the **generators of the
+assertion-translation group plus the V₄-coordinate-chart action**.
+Concretely:
+
+- `introduce_node` → translation by `Nₓ ∈ 𝔄_node` in `H = ℤ^𝔄`.
+- `edge` → translation by `Eₛ,ₖ,ₜ ∈ 𝔄_edge`.
+- `kquery` → equivariant V₄-coordinate map of the observer-pair
+  group `O_U = V₄^U` over a declared universe `U`; if materialized,
+  also a translation by the cover-cell assertion payload.
+
+This algebraic factoring confirms the "three primitives, everything
+else is data" reading: the three primitives generate the entire
+mutation group `G_mut = ℤ^(𝔄_node ⊔ 𝔄_edge)` plus the family of
+observer-coordinate actions `{V₄^U}` indexed by declared universes.
+Any CISC sugar (introduce_break, witness, refine, defer/promote/
+boundary, the analytic views) decomposes into a sequence of these
+three. See [theory.md § 15.11](../src/v4cat/theory.md) for the
+group-theoretic restatement of each primitive.

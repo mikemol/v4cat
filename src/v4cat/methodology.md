@@ -257,6 +257,11 @@ operational realisation of that commitment.
 
 ## The Klein-four read core
 
+> Algebraic basis: `theory.md` § 15 — kquery is the V₄ coordinate
+> chart of the observer-pair group `V₄^U` acting on `(A, B) ∈ 𝒫(U) ×
+> 𝒫(U)` by symmetric difference. RISC writes are translations; kquery
+> is the V₄ coordinate chart.
+
 A symmetry of the methodology surfaces under one further compression:
 *every read is a comparison*. There is no unary query. What looks
 unary —"what breaks does spec X originate?", "what's missing from
@@ -438,6 +443,10 @@ edges. With both alpha (1965) and beta (1985) carrying `origin`
 edges to F1, the originator is alpha — derived, not declared.
 
 #### `KQUERY <left> <right>; <universe> <equivalence> <emit>`
+
+> Algebraic basis: `theory.md` § 15.5 — `kquery` is the V₄-equivariant
+> observer-coordinate map `χ₍A,B₎ : U → V₄` of the observer-pair
+> action.
 
 The Klein-four read primitive — the *only* primitive read.
 

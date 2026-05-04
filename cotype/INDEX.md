@@ -241,6 +241,22 @@ of v4cat to v4cat.
   a universal `PresentationDistribution` record. 43 vcif tests
   green.
 
+## Algebraic foundations (DBE+RFS+S2G fire, 2026-05-04 cont'd)
+
+- [shadow_assertion_history_group.md](shadow_assertion_history_group.md)
+  — the structural shadow companion to [theory.md § 15](../src/v4cat/theory.md).
+  Names the universal at the assertion-axis: v4cat is a free-abelian
+  assertion-history group action `H = ℤ^𝔄`; the visible catalogue
+  is the support quotient `π(H)`; `kquery` is the V₄-equivariant
+  coordinate chart of the observer-pair group `V₄^U`. The slogan:
+  **RISC writes are translations; kquery is the V₄ coordinate
+  chart.** Region #8 fire, **RFS-dominant** — six prior shadows
+  acquire "Algebraic anchor" footers: shadow_kquery_universal_read,
+  shadow_kquery_orbit, shadow_layered_stack,
+  shadow_distribution_seam_mcp, shadow_vcif_distribution,
+  shadow_risc_core. No prior shadow is invalidated; the catalogue
+  thickens forward.
+
 ## Composition
 
 The shadows compose under **Theorem 14.5's preservation theorem**:

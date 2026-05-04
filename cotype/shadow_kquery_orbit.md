@@ -78,3 +78,17 @@ shape; each call is a position.
 This shadow was identified during the S2G fire of 2026-05-02 in
 response to RFS's Finding 3 (Kind.A vestigial slot). RFS deferred
 the orbit classification to S2G; S2G externalised it.
+
+## Algebraic anchor (2026-05-04 cont'd)
+
+Re-read under
+[shadow_assertion_history_group.md](shadow_assertion_history_group.md):
+the 6 named selections of kquery (wedge, agree, blind, coverage,
+left-residue, right-residue) are projections of the V₄ fiber cover,
+*not* independent operations. The orbit they form is the orbit of
+projection-from-V₄-chart, with the chart `χ₍A,B₎ : U → V₄` as the
+generating universal. The orbit-saturation discipline (rule 6 in
+shadow-architecture) is exactly the warning *not* to extract a
+universal record above these 6 — `kquery` already serves as the
+universal at the coordinate-chart axis. See
+[theory.md § 15.5](../src/v4cat/theory.md) and § 15.12.

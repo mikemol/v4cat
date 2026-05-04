@@ -60,3 +60,16 @@ This is what licenses calling kquery the *universal* read primitive.
 7 named selections + 1 closure-check site + every domain query
 written by users via the MCP server's `kquery_tool`. Strong
 multi-site reuse; satisfies the costructure-without-reuse warning.
+
+## Algebraic anchor (2026-05-04 cont'd)
+
+Re-read under
+[shadow_assertion_history_group.md](shadow_assertion_history_group.md):
+`kquery` is the V₄-equivariant coordinate chart of the observer-pair
+group `O_U = V₄^U` acting on `(A, B) ∈ 𝒫(U) × 𝒫(U)` by symmetric
+difference. The four cells are *fibers* of the V₄-valued coordinate
+`χ₍A,B₎ : U → V₄`, not arbitrary result buckets. This shadow's
+"universal read" framing is operative *because* the V₄ chart is the
+unquotiented primitive; every named selection (wedge, agree, blind,
+coverage, left-residue, right-residue) is a downstream projection of
+that chart. See [theory.md § 15.5](../src/v4cat/theory.md).

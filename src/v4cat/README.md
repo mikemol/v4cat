@@ -83,7 +83,9 @@ in the [v4cat-mcp][mcp] repository.
 - **`theory.md`**: foundations — shadow architecture, the
   temporal axis as normal to symmetry planes, magma + pointfree
   topology, Yoneda + Derrida, the recursive schema, convergence,
-  trace-thickening.
+  trace-thickening, plus § 15's group-theoretic reading
+  (RISC writes as translations; kquery as the V₄ coordinate
+  chart of the observer-pair group action).
 - **`examples.md`**: domain templates — programming languages,
   cryptographic primitives, databases, file systems, network
   protocols, mathematical structures, OS designs, ML architectures.
