@@ -11,13 +11,14 @@ Carriers of v4cat factor along **two orthogonal axes**:
 ```text
                 JSON-Schema    RDF/SHACL/SPARQL    (future substrate)
               ┌─────────────┬──────────────────┬───────────────────
-operation-log │ vcif/patch  │ vcif-rdf/patch   │
-state-snapshot│ vcif/snap   │ vcif-rdf/snap    │
-V₄-cover      │ vcif/closur │ vcif-rdf/closur  │
-residue       │ vcif/resid  │ vcif-rdf/resid   │
-─────────────┴─────────────┴──────────────────┴───────────────────
-recognizer    │ vcif/recog  │ vcif-rdf/recog   │      (operator axis,
-vocabulary    │ vcif/vocab  │ vcif-rdf/vocab   │       not depth)
+                JSON-Schema    RDF/SHACL/SPARQL    Tensor (NumPy/JAX/StableHLO)
+operation-log │ vcif/patch  │ vcif-rdf/patch   │ vcif-hlo/op-log     │
+state-snapshot│ vcif/snap   │ vcif-rdf/snap    │ vcif-hlo/U-tensors  │
+V₄-cover      │ vcif/closur │ vcif-rdf/closur  │ vcif-hlo/CoverTens  │
+residue       │ vcif/resid  │ vcif-rdf/resid   │ vcif-hlo/cell-mask  │
+─────────────┴─────────────┴──────────────────┴─────────────────────┴
+recognizer    │ vcif/recog  │ vcif-rdf/recog   │ vcif-hlo/QueryDAG   │   (operator
+vocabulary    │ vcif/vocab  │ vcif-rdf/vocab   │ vcif-hlo/IdDict     │    axis, not depth)
 ```
 
 The **vertical axis** is *projection-depth*. From `shadow_assertion_history_group.md`:
@@ -39,6 +40,7 @@ CBOR / etc. Each substrate brings its own native tooling:
 |---|---|---|---|
 | JSON | JSON Schema 2020-12 (jsonschema) | Python set_expr eval | dict-key uniqueness + content hash |
 | RDF/Turtle | SHACL Core + SHACL-SPARQL (pyshacl) | SPARQL 1.1 (rdflib) | triple-set uniqueness + URI canonicalisation |
+| Tensor | tensor-shape checks (numpy/jax) | branchless mask algebra (`2·A_live + B_live`) | row-equality + first-free padding occupancy |
 | (Protobuf) | protoc-gen + custom validator | (no native) | message-equality + content hash |
 
 A specific carrier instance is a *cell* `(depth, substrate)` of this
@@ -49,11 +51,17 @@ grid.
 - Vertical axis (depth) — registered in
   [shadow_assertion_history_group.md](shadow_assertion_history_group.md);
   the four state-carrying VCIF profiles factor along it.
-- Horizontal axis (substrate) — currently filled at two columns:
+- Horizontal axis (substrate) — currently filled at three columns:
   - JSON column: [v4cat-oss/vcif](https://github.com/v4cat-oss/vcif)
     — six profiles in `src/vcif/schemas/profiles/`.
   - RDF column: [v4cat-oss/vcif-rdf](https://github.com/v4cat-oss/vcif-rdf)
     — six profiles in `src/vcif_rdf/ontology/profiles/`.
+  - Tensor column: [v4cat-oss/vcif-hlo](https://github.com/v4cat-oss/vcif-hlo)
+    — branchless tensor algebra over interned IDs;
+    `ReferentUniverseTensor` + `CoverTensor` + RISC kernels +
+    `QueryDAG` for CISC composition. NumPy backend in v0.1; JAX +
+    StableHLO export available via `[jax]` extra (export path
+    promissory — see [shadow_stablehlo_export_gap.md](shadow_stablehlo_export_gap.md)).
 
 ## Composition operation
 

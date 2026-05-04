@@ -275,6 +275,25 @@ of v4cat to v4cat.
   the event-log surface ships. Region #4 (S2G alone) — registers
   the gap, no v4cat code change this turn.
 
+- [shadow_vcif_hlo_distribution.md](shadow_vcif_hlo_distribution.md)
+  — third substrate column (tensor / OpenHLO). v4cat's RISC
+  operations compile to branchless tensor DAGs over interned
+  identity IDs: `cell_code = 2·A_live + B_live`. Realised at
+  [v4cat-oss/vcif-hlo](https://github.com/v4cat-oss/vcif-hlo) v0.1
+  with NumPy backend; JAX + StableHLO export available as an
+  optional path. Region #8 fire, **DBE-dominant** — the tensor types
+  (ReferentUniverseTensor, CoverTensor) are genuinely new costructure.
+  Discipline rule 6: at three substrate columns we still do *not*
+  extract a `Carrier` wrapper; v4cat remains the universal at the
+  kernel-cell. 50 vcif-hlo tests green; cross-substrate parity with
+  vcif demonstrated.
+
+- [shadow_stablehlo_export_gap.md](shadow_stablehlo_export_gap.md)
+  — promissory cell. vcif-hlo ships NumPy-only in v0.1; the
+  StableHLO export path via `jax.export` exists in principle but is
+  not yet exercised. Region #4 (S2G alone) — registers the gap;
+  closes when vcif-hlo>=0.2 ships `compile_to_stablehlo`.
+
 ## Composition
 
 The shadows compose under **Theorem 14.5's preservation theorem**:
