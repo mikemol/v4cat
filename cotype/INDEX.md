@@ -294,6 +294,20 @@ of v4cat to v4cat.
   not yet exercised. Region #4 (S2G alone) — registers the gap;
   closes when vcif-hlo>=0.2 ships `compile_to_stablehlo`.
 
+## Workspace audit (S2G-alone fire, 2026-05-04 cont'd)
+
+- [audit_workspace_2026_05_04.md](audit_workspace_2026_05_04.md) —
+  late-arc audit fire. Region #4 (S2G alone) — pure cataloguing;
+  no DBE forward, no RFS extraction. Confirms structural
+  soundness across all five distributions (339 tests green; no
+  sibling deps; no `Carrier` wrapper at three substrate columns;
+  carrier-vs-object discipline honoured everywhere). Names four
+  gap-shadows as candidates for future small fires (G1: cross-
+  substrate parity tests; G2: automated coupling-invariant test;
+  G3: vcif-hlo bridge round-trip tests; G4: examples as test
+  fixtures). The catalogue thickens forward by registering what
+  the catalogue knows it doesn't yet test.
+
 ## Composition
 
 The shadows compose under **Theorem 14.5's preservation theorem**:

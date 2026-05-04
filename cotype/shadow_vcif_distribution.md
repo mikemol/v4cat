@@ -1,8 +1,18 @@
 # Shadow: VCIF distribution seam — data-at-rest presentation
 
 > *DBE+RFS+S2G fire of 2026-05-04 (cont'd). Region #8 of the
-> shadow-architecture lattice. The second presentation seam after
-> [shadow_distribution_seam_mcp.md](shadow_distribution_seam_mcp.md).*
+> shadow-architecture lattice. The first **data-at-rest carrier** to
+> be extracted (parallel to [shadow_distribution_seam_mcp.md](shadow_distribution_seam_mcp.md),
+> which is on a different orbit — RPC presentations).
+> Subsequently joined by [shadow_vcif_rdf_distribution.md][vcif-rdf-shadow]
+> and [shadow_vcif_hlo_distribution.md][vcif-hlo-shadow] as the second
+> and third substrate columns of the carrier grid; see
+> [shadow_carrier_grid.md][grid] for the (depth × substrate)
+> framing in which all three sit.*
+
+[grid]: shadow_carrier_grid.md
+[vcif-rdf-shadow]: shadow_carrier_grid.md
+[vcif-hlo-shadow]: shadow_vcif_hlo_distribution.md
 
 ## Form
 
@@ -159,7 +169,13 @@ the second of a pair. Future fires on a third presentation would:
 
 The catalogue knows in advance what the universal *will* look like:
 "P depends-on v4cat; v4cat does not depend on P; identity preserved."
-What it doesn't know is how many such P will exist. Two so far.
+What it doesn't know is how many such P will exist. Three filled
+substrate columns at time of next-fire registration; the orbit is
+parameterised by substrate and remains open-ended. Per the
+re-reading in the algebraic-anchor footer below + discipline rule 6,
+no `Carrier` wrapper is extracted at any number of filled columns.
+See [shadow_carrier_grid.md](shadow_carrier_grid.md) for the
+multi-column grid framing.
 
 ## Algebraic anchor (2026-05-04 cont'd)
 
