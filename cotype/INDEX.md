@@ -231,6 +231,16 @@ of v4cat to v4cat.
   three commits. v4cat-side tests pass with `mcp` uninstalled;
   v4cat-mcp-side tests pass against the installed v4cat package.
 
+- [shadow_vcif_distribution.md](shadow_vcif_distribution.md) — the
+  VCIF interchange format lands as a second sibling distribution
+  `vcif` (repo `v4cat-oss/vcif`), data-at-rest counterpart to
+  v4cat-mcp's RPC presentation. Region #8 fire; DBE-heavy, light
+  RFS (re-grouping methodology.md's existing JSON example), S2G
+  registers the second presentation row. Two presentation seams
+  now exist; below the ≥3-instance threshold for RFS-extraction of
+  a universal `PresentationDistribution` record. 43 vcif tests
+  green.
+
 ## Composition
 
 The shadows compose under **Theorem 14.5's preservation theorem**:

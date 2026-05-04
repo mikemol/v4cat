@@ -114,6 +114,24 @@ shape is identical for any domain.
 
 ### Document store (JSON-shaped)
 
+The canonical JSON interchange for a v4cat catalogue is **VCIF**, in
+the [v4cat-oss/vcif][vcif] sibling distribution. A VCIF document is
+flat — nodes, edges, covers, projections, tensions, derivations,
+residues, expectations — rather than nested-per-break, and is
+JSON-Schema-validated against the
+[`vcif-1.0.schema.json`][vcif-schema] core schema plus a profile
+schema for its declared `kind`. See [vcif/docs/spec.md][vcif-spec].
+
+[vcif]: https://github.com/v4cat-oss/vcif
+[vcif-schema]: https://github.com/v4cat-oss/vcif/blob/main/src/vcif/schemas/vcif-1.0.schema.json
+[vcif-spec]: https://github.com/v4cat-oss/vcif/blob/main/docs/spec.md
+
+The break-centric form below is a *non-canonical illustrative* shape
+showing how one break + its witnesses + per-witness instance detail
+read as a single denormalized document. It pre-dates VCIF and is kept
+here for readers approaching the data shape via an intuitive nested
+JSON; the VCIF flat form is the contract.
+
 ```json
 {
   "kind": "break",
