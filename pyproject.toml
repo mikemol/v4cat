@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "v4cat"
 version = "0.5.0"
-description = "Symmetry-break cataloguing — ISA + SQLite schema + MCP server for accumulating named structural distinctions about a domain (Klein-four-equipped, self-hosting)"
+description = "Symmetry-break cataloguing — ISA + SQLite schema for accumulating named structural distinctions about a domain (Klein-four-equipped, self-hosting)"
 readme = "README.md"
 requires-python = ">=3.10"
 license = { file = "LICENSE" }
@@ -14,8 +14,6 @@ authors = [
 ]
 keywords = [
     "knowledge-graph",
-    "mcp",
-    "model-context-protocol",
     "structural-cataloguing",
     "klein-four",
     "yoneda",
@@ -33,9 +31,7 @@ classifiers = [
     "Topic :: Scientific/Engineering :: Information Analysis",
     "Topic :: Software Development :: Libraries :: Python Modules",
 ]
-dependencies = [
-    "mcp>=1.0",
-]
+dependencies = []
 
 [project.optional-dependencies]
 dev = [
@@ -44,13 +40,11 @@ dev = [
 ]
 
 [project.urls]
-Homepage    = "https://github.com/mikemol/v4cat"
-Methodology = "https://github.com/mikemol/v4cat/blob/main/src/v4cat/methodology.md"
-Source      = "https://github.com/mikemol/v4cat"
-Issues      = "https://github.com/mikemol/v4cat/issues"
-
-[project.scripts]
-v4cat-mcp = "v4cat.mcp_server:main"
+Homepage    = "https://github.com/v4cat-oss/v4cat"
+Methodology = "https://github.com/v4cat-oss/v4cat/blob/main/src/v4cat/methodology.md"
+MCP-server  = "https://github.com/v4cat-oss/v4cat-mcp"
+Source      = "https://github.com/v4cat-oss/v4cat"
+Issues      = "https://github.com/v4cat-oss/v4cat/issues"
 
 [tool.setuptools]
 include-package-data = true

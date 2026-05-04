@@ -7,7 +7,9 @@ implements. ``bootstrap.py`` reads :data:`SIGNATURE` at runtime as
 the witness referent for the IMPL predicate.
 
 Adding a primitive to the framework is a four-step move:
-  1. Implement it (in ``catalogue.py`` / ``views.py`` / ``mcp_server.py``).
+  1. Implement it (in ``catalogue.py`` / ``views.py``; or, for an
+     MCP-side primitive, in ``v4cat_mcp.server`` in the v4cat-mcp
+     distribution).
   2. Add a Cell for it here.
   3. Catalogue it (a Q-numbered break + witness in ``framework_seed.sql``).
   4. Run the closure check; if green, the move is honest.

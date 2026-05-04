@@ -1,12 +1,13 @@
 """
-Branch-coverage tests — exercises the residue branches outside the
-ISA, MCP, sandbox, and self-hosting test files.
+Branch-coverage tests — v4cat-core residue branches outside the
+ISA and self-hosting test files.
 
 Background: kquery on the per-test-file branch sets identified 27
 branches in the (00) cell — neither the ISA-track nor the MCP-track
-exercised them. This file closes that cell. See
+exercised them. This file closes that cell for the v4cat core. See
 cotype/snap_report.md and the kquery analysis in the session of
-2026-05-02.
+2026-05-02. The MCP-side branch-coverage tests live in the
+v4cat-mcp distribution.
 
 Each test names the branch(es) it covers in its docstring so future
 RFS fires can re-run the analysis and recognise these as orbit
@@ -18,15 +19,11 @@ Run as a script::
 """
 from __future__ import annotations
 
-import asyncio
-import json
-import runpy
 import sqlite3
 import sys
 import tempfile
 import traceback
 from pathlib import Path
-from unittest.mock import patch
 
 from v4cat import SymmetryCatalogue, consistency
 from v4cat.cells import Cell, Kind
@@ -48,8 +45,6 @@ from v4cat.curry import (
     resolve,
 )
 from v4cat.theory import SIGNATURE, by_kind
-import v4cat.mcp_server as srv
-from v4cat.mcp_server import server, set_catalogue
 
 
 # =============================================================================
@@ -740,343 +735,6 @@ def test_enumerate_supported_cells_handles_missing_witness_table():
 
 
 # =============================================================================
-# Asynchronous tests — MCP server resources, tools, error paths, CLI
-# =============================================================================
-
-async def call_tool(tool_name, /, **kwargs):
-    result = await server.call_tool(tool_name, kwargs)
-    if isinstance(result, tuple) and len(result) == 2:
-        _, structured = result
-        if isinstance(structured, dict) and set(structured.keys()) == {'result'}:
-            return structured['result']
-        return structured
-    if isinstance(result, list) and result and hasattr(result[0], 'text'):
-        text = result[0].text
-        try:
-            return json.loads(text)
-        except json.JSONDecodeError:
-            return text
-    return result
-
-
-async def read_resource(uri: str):
-    result = await server.read_resource(uri)
-    items = list(result)
-    if items and hasattr(items[0], 'content'):
-        text = items[0].content
-        try:
-            return json.loads(text)
-        except json.JSONDecodeError:
-            return text
-    return items
-
-
-def fresh_populated_catalogue():
-    cat = SymmetryCatalogue(':memory:')
-    set_catalogue(cat)
-    cat.introduce_object('alpha', 'Alpha', year=1980, catalogue_order=1)
-    cat.introduce_break('F1', 'Spatial test', axes=['spatial'])
-    cat.witness('alpha', 'F1', 'origin')
-    cat.witness('alpha', 'F1', 'catalogue-introduces')
-    cat.commit()
-    return cat
-
-
-async def test_get_catalogue_lazy_init():
-    """mcp_server.py:83-84 — get_catalogue() lazily creates _cat when None."""
-    saved = srv._cat
-    srv._cat = None
-    try:
-        # Use a temp file path so the lazy default doesn't write to /tmp/cat.db
-        with tempfile.NamedTemporaryFile(suffix='.db', delete=False) as tf:
-            tf_path = tf.name
-        old_default = srv.DEFAULT_DB_PATH
-        srv.DEFAULT_DB_PATH = tf_path
-        try:
-            cat = srv.get_catalogue()
-            assert cat is not None
-            assert srv._cat is cat
-        finally:
-            srv.DEFAULT_DB_PATH = old_default
-            Path(tf_path).unlink(missing_ok=True)
-    finally:
-        srv._cat = saved
-
-
-async def test_swap_active_swallows_close_error():
-    """mcp_server.py:115->120 — _swap_active swallows close exception."""
-    class BrokenCat:
-        def close(self):
-            raise RuntimeError('close failed')
-    saved = srv._cat
-    srv._cat = BrokenCat()
-    try:
-        new = SymmetryCatalogue(':memory:')
-        srv._swap_active(new, 'test_slot')
-        assert srv._cat is new
-        assert srv._active_slot == 'test_slot'
-    finally:
-        srv._cat = saved
-        srv._active_slot = None
-
-
-async def test_swap_active_with_no_prior_catalogue():
-    """mcp_server.py:115->120 (False side) — _swap_active when _cat is None."""
-    saved = srv._cat
-    saved_slot = srv._active_slot
-    srv._cat = None
-    srv._active_slot = None
-    try:
-        new = SymmetryCatalogue(':memory:')
-        srv._swap_active(new, 'fresh_slot')
-        assert srv._cat is new
-        assert srv._active_slot == 'fresh_slot'
-    finally:
-        srv._cat = saved
-        srv._active_slot = saved_slot
-
-
-async def test_introduce_tension_tool():
-    """mcp_server.py:270-277 — introduce_tension MCP tool body."""
-    fresh_populated_catalogue()
-    result = await call_tool(
-        'introduce_tension',
-        id='T_mcp', name='MCP-introduced tension',
-        description='via MCP', breaks_involved=['F1'],
-    )
-    assert result['ok'] is True
-    assert result['id'] == 'T_mcp'
-
-
-async def test_query_first_seen_tool():
-    """mcp_server.py:435 — query_first_seen tool returns None for unknown."""
-    fresh_populated_catalogue()
-    result = await call_tool('query_first_seen', break_number='F-unknown')
-    assert result is None
-
-
-async def test_query_inherited_breaks_tool():
-    """mcp_server.py:455 — query_inherited_breaks tool body."""
-    cat = fresh_populated_catalogue()
-    cat.introduce_object(
-        'beta', 'Beta', year=1990,
-        lineage=[('alpha', 'descended-from')],
-    )
-    cat.commit()
-    result = await call_tool('query_inherited_breaks', object_id='beta')
-    assert isinstance(result, list)
-    inherited = {r['break_number'] for r in result}
-    assert 'F1' in inherited
-
-
-async def test_get_break_404_for_missing():
-    """mcp_server.py:567->568 — get_break returns error for unknown."""
-    fresh_populated_catalogue()
-    result = await read_resource('catalogue://breaks/Q-nonexistent')
-    assert 'error' in result
-
-
-async def test_list_objects_resource():
-    """mcp_server.py:578 — list_objects resource body."""
-    fresh_populated_catalogue()
-    result = await read_resource('catalogue://objects')
-    assert isinstance(result, list)
-    assert any(o['id'] == 'alpha' for o in result)
-
-
-async def test_get_object_404_for_missing():
-    """mcp_server.py:586->587 — get_object returns error for unknown."""
-    fresh_populated_catalogue()
-    result = await read_resource('catalogue://objects/nonexistent')
-    assert 'error' in result
-
-
-async def test_tensions_resource():
-    """mcp_server.py:606 — tensions resource body."""
-    cat = fresh_populated_catalogue()
-    cat.introduce_tension('T1', 'Sample tension')
-    cat.commit()
-    result = await read_resource('catalogue://tensions')
-    assert isinstance(result, list)
-    assert any(t['id'] == 'T1' for t in result)
-
-
-async def test_violations_resource_with_valid_rule():
-    """mcp_server — catalogue://violations/{rule} parametric
-    consistency-rule resource (success path)."""
-    cat = fresh_populated_catalogue()
-    with tempfile.NamedTemporaryFile('w', suffix='.sql', delete=False) as f:
-        f.write(
-            "CREATE VIEW IF NOT EXISTS demo_violations AS "
-            "SELECT 'sentinel' AS spec_id WHERE 1 = 0;"
-        )
-        f.flush()
-        cat.load_extension(f.name)
-    cat.commit()
-    result = await read_resource('catalogue://violations/demo')
-    assert result == []
-
-
-async def test_violations_resource_rejects_bad_rule_name():
-    """mcp_server — catalogue://violations/{rule} returns an error
-    object when the rule name is not a valid identifier."""
-    fresh_populated_catalogue()
-    result = await read_resource('catalogue://violations/1bad')
-    assert isinstance(result, dict)
-    assert 'error' in result
-    assert 'identifier' in result['error']
-
-
-async def test_axes_resource():
-    """mcp_server.py:622 — axes resource body."""
-    fresh_populated_catalogue()
-    result = await read_resource('catalogue://axes')
-    assert isinstance(result, dict)
-
-
-async def test_mixed_breaks_resource():
-    """mcp_server.py:628 — mixed_breaks resource body."""
-    cat = fresh_populated_catalogue()
-    cat.introduce_break(
-        'F-mixed', 'Mixed-axis break',
-        axes=['spatial', 'temporal'],
-    )
-    cat.commit()
-    result = await read_resource('catalogue://mixed_breaks')
-    assert isinstance(result, list)
-
-
-async def test_agent_witnesses_resource():
-    """mcp_server.py:634 — agent_witnesses resource body."""
-    fresh_populated_catalogue()
-    result = await read_resource('catalogue://agent_witnesses')
-    assert isinstance(result, list)
-
-
-async def test_spec_axes_resource():
-    """mcp_server.py:640 — spec_axes resource body."""
-    fresh_populated_catalogue()
-    result = await read_resource('catalogue://spec_axes')
-    assert isinstance(result, list)
-
-
-async def test_top_originators_resource():
-    """mcp_server.py:646 — top_originators resource body."""
-    fresh_populated_catalogue()
-    result = await read_resource('catalogue://top_originators')
-    assert isinstance(result, list)
-
-
-async def test_self_hosting_resource_when_self_hosting():
-    """mcp_server.py:693-711 — self_hosting resource when supported."""
-    fresh_populated_catalogue()
-    result = await read_resource('catalogue://self_hosting')
-    assert result['supported'] is True
-    assert result['passing'] is True
-    assert 'cells' in result
-
-
-async def test_self_hosting_resource_when_not_self_hosting():
-    """mcp_server.py:697->698 — self_hosting resource when not supported."""
-    cat = SymmetryCatalogue(
-        ':memory:', bootstrap=True, check_self_hosting=False,
-    )
-    set_catalogue(cat)
-    result = await read_resource('catalogue://self_hosting')
-    assert result['supported'] is False
-    assert result['passing'] is None
-
-
-# =============================================================================
-# CLI / main() — covered by running mcp_server as a script with mocks
-# =============================================================================
-
-async def test_main_default_without_root_errors():
-    """mcp_server.py:1021->1022 — --default without --root errors out."""
-    with patch('sys.argv', ['v4cat-mcp', '--default', 'foo']):
-        with patch.object(srv.server, 'run'):
-            try:
-                srv.main()
-                assert False, "expected SystemExit"
-            except SystemExit:
-                pass
-
-
-async def test_main_root_only():
-    """mcp_server.py:1025->1032 — --root without --default."""
-    with tempfile.TemporaryDirectory() as tmpdir:
-        with patch('sys.argv', ['v4cat-mcp', '--root', tmpdir]):
-            with patch.object(srv.server, 'run'):
-                srv.main()
-
-
-async def test_main_root_with_default_creates_slot():
-    """mcp_server.py:1027->1028, 1027->1035 — --root + --default opens slot."""
-    with tempfile.TemporaryDirectory() as tmpdir:
-        # Pre-create the slot file so path_for() finds it
-        Path(tmpdir, 'mydomain.db').touch()
-        with patch('sys.argv', ['v4cat-mcp', '--root', tmpdir,
-                                 '--default', 'mydomain']):
-            with patch.object(srv.server, 'run'):
-                srv.main()
-
-
-async def test_main_db_path_only():
-    """mcp_server.py:1032->1033, 1032->1035 — --db sets DEFAULT_DB_PATH."""
-    saved_default = srv.DEFAULT_DB_PATH
-    saved_cat = srv._cat
-    try:
-        with tempfile.NamedTemporaryFile(suffix='.db', delete=False) as tf:
-            tf_path = tf.name
-        with patch('sys.argv', ['v4cat-mcp', '--db', tf_path]):
-            with patch.object(srv.server, 'run'):
-                srv.main()
-        assert srv.DEFAULT_DB_PATH == tf_path
-        Path(tf_path).unlink(missing_ok=True)
-    finally:
-        srv.DEFAULT_DB_PATH = saved_default
-        srv._cat = saved_cat
-
-
-async def test_main_no_args_uses_defaults():
-    """mcp_server.py:1032->1035 (False side) — no --root and no --db."""
-    saved_default = srv.DEFAULT_DB_PATH
-    saved_cat = srv._cat
-    try:
-        with patch('sys.argv', ['v4cat-mcp']):
-            with patch.object(srv.server, 'run'):
-                srv.main()
-    finally:
-        srv.DEFAULT_DB_PATH = saved_default
-        srv._cat = saved_cat
-
-
-async def test_module_main_guard():
-    """mcp_server.py:1038->1039 — `if __name__ == '__main__': main()`.
-
-    Run the module as a script via runpy. runpy re-imports the
-    module under name '__main__', so we patch the FastMCP.run
-    method at the *class* level so the freshly-instantiated server
-    inherits the no-op.
-    """
-    from mcp.server.fastmcp import FastMCP
-    saved_default = srv.DEFAULT_DB_PATH
-    saved_cat = srv._cat
-    try:
-        with tempfile.NamedTemporaryFile(suffix='.db', delete=False) as tf:
-            tf_path = tf.name
-        with patch('sys.argv', ['v4cat-mcp', '--db', tf_path]):
-            with patch.object(FastMCP, 'run', lambda self, *a, **kw: None):
-                runpy.run_module(
-                    'v4cat.mcp_server', run_name='__main__',
-                )
-        Path(tf_path).unlink(missing_ok=True)
-    finally:
-        srv.DEFAULT_DB_PATH = saved_default
-        srv._cat = saved_cat
-
-
-# =============================================================================
 # Test harness
 # =============================================================================
 
@@ -1137,49 +795,6 @@ SYNC_TESTS = [
     test_check_risc_discipline_doesnt_double_record_cycle,
 ]
 
-ASYNC_TESTS = [
-    test_get_catalogue_lazy_init,
-    test_swap_active_swallows_close_error,
-    test_swap_active_with_no_prior_catalogue,
-    test_introduce_tension_tool,
-    test_query_first_seen_tool,
-    test_query_inherited_breaks_tool,
-    test_get_break_404_for_missing,
-    test_list_objects_resource,
-    test_get_object_404_for_missing,
-    test_tensions_resource,
-    test_violations_resource_with_valid_rule,
-    test_violations_resource_rejects_bad_rule_name,
-    test_axes_resource,
-    test_mixed_breaks_resource,
-    test_agent_witnesses_resource,
-    test_spec_axes_resource,
-    test_top_originators_resource,
-    test_self_hosting_resource_when_self_hosting,
-    test_self_hosting_resource_when_not_self_hosting,
-    test_main_default_without_root_errors,
-    test_main_root_only,
-    test_main_root_with_default_creates_slot,
-    test_main_db_path_only,
-    test_main_no_args_uses_defaults,
-    test_module_main_guard,
-]
-
-
-async def run_async_all():
-    passed = failed = 0
-    for test in ASYNC_TESTS:
-        try:
-            await test()
-            print(f"  ✓ {test.__name__}")
-            passed += 1
-        except Exception as e:
-            print(f"  ✗ {test.__name__}: {e}")
-            traceback.print_exc()
-            failed += 1
-    return passed, failed
-
-
 def main() -> int:
     passed = failed = 0
     for test in SYNC_TESTS:
@@ -1191,9 +806,6 @@ def main() -> int:
             print(f"  ✗ {test.__name__}: {e}")
             traceback.print_exc()
             failed += 1
-    a_passed, a_failed = asyncio.run(run_async_all())
-    passed += a_passed
-    failed += a_failed
     print(f"\n{passed} passed, {failed} failed")
     return 0 if failed == 0 else 1
 

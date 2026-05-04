@@ -221,6 +221,16 @@ of v4cat to v4cat.
   (5 inter-shadow quotients identified that connect the new
   architecture to the existing shadow library).
 
+## Distribution seam (DBE+RFS+S2G fire, 2026-05-04)
+
+- [shadow_distribution_seam_mcp.md](shadow_distribution_seam_mcp.md)
+  — the MCP server moved out of v4cat into a sibling distribution
+  `v4cat-mcp` (repo `v4cat-oss/v4cat-mcp`). The seam runs at the
+  import boundary; the catalogue's identity is unchanged. Region
+  #8 fire (all three skills active); sequential rotation across
+  three commits. v4cat-side tests pass with `mcp` uninstalled;
+  v4cat-mcp-side tests pass against the installed v4cat package.
+
 ## Composition
 
 The shadows compose under **Theorem 14.5's preservation theorem**:
