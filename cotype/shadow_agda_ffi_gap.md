@@ -1,5 +1,7 @@
 # Shadow: Agda FFI gap (promissory cell)
 
+**Tracking**: [v4cat-oss/methodology#2](https://github.com/v4cat-oss/methodology/issues/2) (status canonical there per [shadow_workspace_project_tracking.md](shadow_workspace_project_tracking.md)).
+
 > *S2G fire of 2026-05-04 (companion to
 > [shadow_agda2v4cat_distribution.md](shadow_agda2v4cat_distribution.md)).
 > **At orbit-position 1**; per discipline rule 6, S2G to catalogue

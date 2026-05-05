@@ -1,5 +1,7 @@
 # Shadow: Agda extraction gap — where-clause local definitions (Tier 3, item 24)
 
+**Tracking**: [v4cat-oss/agda2v4cat#10](https://github.com/v4cat-oss/agda2v4cat/issues/10) (status canonical there per [shadow_workspace_project_tracking.md](shadow_workspace_project_tracking.md)).
+
 > *S2G fire of 2026-05-04 (companion to
 > [shadow_agda2v4cat_distribution.md](shadow_agda2v4cat_distribution.md)).
 > One of ten per-item Tier-3 promissory shadows. Region **#4** (S2G

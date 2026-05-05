@@ -1,5 +1,7 @@
 # Shadow: vcif/v4cat bootstrap gap (G5)
 
+**Tracking**: [v4cat-oss/methodology#1](https://github.com/v4cat-oss/methodology/issues/1) (status canonical there per [shadow_workspace_project_tracking.md](shadow_workspace_project_tracking.md)).
+
 > *S2G fire of 2026-05-04. **Region #4** (S2G alone — pure
 > cataloguing). Surfaced during agda2v4cat v0.1's end-to-end smoke
 > test: an integration mismatch between vcif's `apply` and v4cat's

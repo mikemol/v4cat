@@ -56,18 +56,29 @@ Carrier-vs-object discipline:
 
 Six fires across this trajectory, each with a recorded shadow:
 
-| # | Fire | Region | Shadow file |
-| --- | --- | --- | --- |
-| 1 | v4cat ↔ v4cat-mcp split | #8 | shadow_distribution_seam_mcp.md |
-| 2 | VCIF v0.1 (JSON carrier) | #8 | shadow_vcif_distribution.md |
-| 3 | Group-theoretic reading | #8 RFS-dominant | shadow_assertion_history_group.md (+6 algebraic-anchor footers) |
-| 4 | vcif-rdf v0.1 (RDF carrier) | #8 | (combined into shadow_carrier_grid.md) |
-| 5 | (depth × substrate) carrier grid | #8 + #4 | shadow_carrier_grid.md + shadow_event_log_gap.md |
-| 6 | vcif-hlo v0.1 (tensor carrier) | #8 DBE-dominant | shadow_vcif_hlo_distribution.md + shadow_stablehlo_export_gap.md |
-| 7 | This audit | **#4 (S2G alone)** | this file |
-| 8 | G1 closure (cross-substrate parity tests) | #8 DBE-led | this file (closure section below) |
-| 9 | G2 closure (v4cat-certify suite) | #8 | shadow_workspace_certification.md |
-| 10 | agda2v4cat v0.1 (catalogue source — Agda) | #8 DBE-led | shadow_agda2v4cat_distribution.md + shadow_agda_ffi_gap.md + 10 per-item `shadow_agda_extraction_gap_<item>.md` |
+| # | Fire | Region | Shadow file | Issue |
+| --- | --- | --- | --- | --- |
+| 1 | v4cat ↔ v4cat-mcp split | #8 | shadow_distribution_seam_mcp.md | [methodology#3][m3] |
+| 2 | VCIF v0.1 (JSON carrier) | #8 | shadow_vcif_distribution.md | [methodology#4][m4] |
+| 3 | Group-theoretic reading | #8 RFS-dominant | shadow_assertion_history_group.md (+6 algebraic-anchor footers) | [v4cat#1][v1] |
+| 4 | vcif-rdf v0.1 (RDF carrier) | #8 | (combined into shadow_carrier_grid.md) | [methodology#5][m5] |
+| 5 | (depth × substrate) carrier grid | #8 + #4 | shadow_carrier_grid.md + shadow_event_log_gap.md | [v4cat#2][v2] |
+| 6 | vcif-hlo v0.1 (tensor carrier) | #8 DBE-dominant | shadow_vcif_hlo_distribution.md + shadow_stablehlo_export_gap.md | [methodology#6][m6] |
+| 7 | This audit | **#4 (S2G alone)** | this file | [v4cat#3][v3] |
+| 8 | G1 closure (cross-substrate parity tests) | #8 DBE-led | this file (closure section below) | [vcif-hlo#3][h3] |
+| 9 | G2 closure (v4cat-certify suite) | #8 | shadow_workspace_certification.md | [methodology#7][m7] |
+| 10 | agda2v4cat v0.1 (catalogue source — Agda) | #8 DBE-led | shadow_agda2v4cat_distribution.md + shadow_agda_ffi_gap.md + 10 per-item `shadow_agda_extraction_gap_<item>.md` | [methodology#8][m8] |
+
+[m3]: https://github.com/v4cat-oss/methodology/issues/3
+[m4]: https://github.com/v4cat-oss/methodology/issues/4
+[m5]: https://github.com/v4cat-oss/methodology/issues/5
+[m6]: https://github.com/v4cat-oss/methodology/issues/6
+[m7]: https://github.com/v4cat-oss/methodology/issues/7
+[m8]: https://github.com/v4cat-oss/methodology/issues/8
+[v1]: https://github.com/v4cat-oss/v4cat/issues/1
+[v2]: https://github.com/v4cat-oss/v4cat/issues/2
+[v3]: https://github.com/v4cat-oss/v4cat/issues/3
+[h3]: https://github.com/v4cat-oss/vcif-hlo/issues/3
 
 Meta-S₃ rotation observed across the trajectory:
 
@@ -87,7 +98,19 @@ violation; each is a candidate for a future small fire.
 closed (see below). G3 and G4 remain open. **G5 added** at the
 end-of-session agda2v4cat fire.
 
+**Status canonicalised** (2026-05-05): live status for each gap
+moved to the [v4cat-oss workspace GH
+Project](https://github.com/orgs/v4cat-oss/projects) per
+[shadow_workspace_project_tracking.md](shadow_workspace_project_tracking.md).
+The per-gap structural detail below remains canonical for
+structure; the open / closed / in-progress flag is canonical at
+the issue. The next audit memo will re-derive its gap registry
+by querying the Project's status field rather than maintaining
+this prose registry.
+
 ### G1 — cross-substrate parity tests ✓ **CLOSED 2026-05-04**
+
+**Tracking**: closure recorded at [v4cat-oss/vcif-hlo#3](https://github.com/v4cat-oss/vcif-hlo/issues/3) (Fire #8 trajectory entry, closed).
 
 **Claim**: a snapshot read from any of {vcif, vcif-rdf, vcif-hlo} and
 classified by kquery yields *identical* V₄ cell membership.
@@ -122,6 +145,8 @@ parametrized cross-substrate parity tests in
   string conversion happens only at the `IdDictionary` boundary.
 
 ### G2 — automated coupling-invariant test ✓ **CLOSED 2026-05-04**
+
+**Tracking**: closure recorded at [v4cat-oss/methodology#7](https://github.com/v4cat-oss/methodology/issues/7) (Fire #9 trajectory entry — v4cat-certify v0.1, closed).
 
 **Claim**: pyproject.tomls never develop sibling-to-sibling
 runtime deps. v4cat itself depends on nothing.
@@ -159,6 +184,8 @@ total tests: 384 across the workspace.
 
 ### G3 — bridge round-trip tests for vcif-hlo
 
+**Tracking**: [v4cat-oss/vcif-hlo#2](https://github.com/v4cat-oss/vcif-hlo/issues/2) (status canonical there).
+
 **Claim**: `bridge_v4cat.apply_derive_mask` correctly calls
 `cat.edge` per cell-10 row; idempotent on re-application.
 
@@ -173,6 +200,8 @@ works equivalently.
 
 ### G4 — examples as test fixtures
 
+**Tracking**: [v4cat-oss/vcif-hlo#1](https://github.com/v4cat-oss/vcif-hlo/issues/1) (status canonical there).
+
 **Claim**: vcif-hlo's three example scripts in `docs/examples/`
 work as documented.
 
@@ -185,6 +214,8 @@ import each example as a module and call its `main()`, asserting
 no exceptions and verifying key outputs.
 
 ### G5 — vcif/v4cat bootstrap gap (NEW, surfaced 2026-05-04 by agda2v4cat)
+
+**Tracking**: [v4cat-oss/methodology#1](https://github.com/v4cat-oss/methodology/issues/1) (status canonical there).
 
 **Claim**: `vcif.apply(doc, catalogue)` works against any
 default-bootstrapped `SymmetryCatalogue` without preliminaries.

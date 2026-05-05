@@ -376,6 +376,46 @@ A new role distinct from kernel / RPC / carriers / certification:
   the vcif side + symmetric pre-declaration in
   `framework_seed.sql`. Region #4 (S2G alone).
 
+## Workspace project tracking (DBE+RFS+S2G fire, 2026-05-05)
+
+A new SoT split: GitHub Issues + the org-level Project become
+canonical for **status** (open / in-progress / closed / blocked);
+cotype shadows remain canonical for **structure**. The two
+surfaces are linked by mutual back-references (issue body →
+shadow path; shadow's `Tracking` line → issue #).
+
+- [shadow_workspace_project_tracking.md](shadow_workspace_project_tracking.md)
+  — DBE+RFS+S2G fire establishing the split. Defines the
+  closure-scope rule (cross-repo issues → `methodology`,
+  single-repo → that repo), the pedagogical-issue-body
+  convention, the parent-child archive rule, and the
+  audit-rederivation procedure. Region #8 fire. Per discipline
+  rule 6: at orbit position 1 of "v4cat-oss workspace tracking
+  surface", no `MetaTrackingFramework` extracted.
+
+## Methodology repo (cross-reference, 2026-05-05)
+
+The four-skill methodology is published at
+[v4cat-oss/methodology](https://github.com/v4cat-oss/methodology)
+as the public reconciliation of the shadow-architecture skills
+(canonical specs live as Claude Code skill definitions on the
+workstation that drives this workspace). Issue bodies referencing
+*region #N*, *orbit position*, *S2G/DBE/RFS* terminology link to
+that repo for definitions. The repo additionally hosts
+**workspace-level issues** — those whose closure-scope spans ≥2
+repos in v4cat-oss.
+
+- [shadow-architecture.md](https://github.com/v4cat-oss/methodology/blob/main/shadow-architecture.md)
+  — the 8-region lattice + the two forbidden regions.
+- [discipline-rules.md](https://github.com/v4cat-oss/methodology/blob/main/discipline-rules.md)
+  — the six rules.
+- [glossary.md](https://github.com/v4cat-oss/methodology/blob/main/glossary.md)
+  — short definitions for the workspace's vocabulary.
+
+Reconciliation issues (where the public docs disagree with
+canonical workstation skill behaviour) are filed against
+`v4cat-oss/methodology` tagged `reconciliation`.
+
 ## Composition
 
 The shadows compose under **Theorem 14.5's preservation theorem**:
