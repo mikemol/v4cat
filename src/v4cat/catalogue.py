@@ -26,6 +26,8 @@ import sqlite3
 from pathlib import Path
 from typing import Any, Iterable, Optional
 
+from . import event_cells
+
 
 HERE = Path(__file__).parent
 DEFAULT_SCHEMA_PATH = HERE / 'schema.sql'
@@ -471,6 +473,14 @@ class SymmetryCatalogue:
                     (id, key, None if value is None else str(value)),
                 )
 
+        # Geometric-currying substrate: every introduced node has a
+        # corresponding 0-cell that closes immediately.
+        cell_id = event_cells.node_cell_id(id)
+        event_cells.introduce_cell(self.conn, cell_id, "NodeCell")
+        event_cells.bind_role(self.conn, cell_id, "self", id)
+        event_cells.close_boundary(self.conn, cell_id)
+        event_cells.close_cell(self.conn, cell_id)
+
     def edge(
         self,
         src: str,
@@ -522,6 +532,17 @@ class SymmetryCatalogue:
                 f"edge-kind {kind!r} has unsupported target-type "
                 f"{target_type!r}; expected 'break' or 'spec'"
             )
+
+        # Geometric-currying substrate: every saturated edge is the
+        # projection of a closed event-cell with three role-bindings.
+        # Saturating mode: introduce + bind + close speculatively.
+        cell_id = event_cells.edge_cell_id(src, kind, tgt)
+        event_cells.introduce_cell(self.conn, cell_id, "EdgeCell")
+        event_cells.bind_role(self.conn, cell_id, "source", src)
+        event_cells.bind_role(self.conn, cell_id, "kind",   kind)
+        event_cells.bind_role(self.conn, cell_id, "target", tgt)
+        event_cells.close_boundary(self.conn, cell_id)
+        event_cells.close_cell(self.conn, cell_id)
 
     def evaluate_tension(
         self,

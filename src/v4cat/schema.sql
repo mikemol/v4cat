@@ -454,6 +454,38 @@ WITH RECURSIVE ancestry(descendant, ancestor, depth) AS (
 SELECT * FROM ancestry;
 
 -- =============================================================================
+-- S13 — Geometric currying substrate
+--
+-- Per cotype/shadow_geometric_currying.md: edges are projections of
+-- closed event-cells whose boundaries contain three role obligations
+-- (source / kind / target). The legacy witnesses / lineages tables
+-- remain as saturated projections. These three tables hold the
+-- underlying geometric form.
+-- =============================================================================
+
+CREATE TABLE IF NOT EXISTS cells (
+    id            TEXT PRIMARY KEY,
+    cell_kind     TEXT NOT NULL,
+    closure_state TEXT NOT NULL DEFAULT 'open'
+);
+
+CREATE TABLE IF NOT EXISTS role_bindings (
+    cell_id       TEXT NOT NULL,
+    role          TEXT NOT NULL,
+    occupant_id   TEXT NOT NULL,
+    closure_state TEXT NOT NULL DEFAULT 'open',
+    PRIMARY KEY (cell_id, role)
+);
+
+CREATE TABLE IF NOT EXISTS path_steps (
+    path_id    TEXT NOT NULL,
+    step_index INTEGER NOT NULL,
+    cell_id    TEXT NOT NULL,
+    PRIMARY KEY (path_id, step_index),
+    FOREIGN KEY (cell_id) REFERENCES cells(id)
+);
+
+-- =============================================================================
 -- END
 --
 -- Domain-specific extensions (per-break detail tables, per-domain views,
