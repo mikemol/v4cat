@@ -376,6 +376,55 @@ A new role distinct from kernel / RPC / carriers / certification:
   the vcif side + symmetric pre-declaration in
   `framework_seed.sql`. Region #4 (S2G alone).
 
+## Reference carrier (DBE+RFS+S2G fire, 2026-05-05)
+
+A new role distinct from kernel / RPC / data-at-rest carriers /
+certification / catalogue source: **reference carrier** — a full
+re-implementation of the v4cat kernel itself in a substrate where
+the finite incidence geometry is painfully visible. The first
+instance is Octave; the algebraic anchor is the same V₄ coordinate
+chart in `theory.md` § 15.
+
+- [shadow_v4cat_octave_distribution.md](shadow_v4cat_octave_distribution.md)
+  — first instance of the reference-carrier role, realised at
+  [v4cat-oss/v4cat-octave](https://github.com/v4cat-oss/v4cat-octave).
+  Reimplements the RISC core + sparse incidence + QueryDAGs +
+  self-hosting closure + VCIF snapshot round-trip in GNU Octave.
+  The geometric-currying invariant (`edge` introduces its boundary
+  nodes if absent) is named as load-bearing. Kernel-parity (Octave
+  ↔ Python on shared VCIF input) is recognised as a sibling of
+  carrier-parity. Region #8 fire, DBE-led. Per discipline rule 6:
+  kernel-implementation orbit at position 2 (Python + Octave),
+  reference-carrier orbit at position 1 -- no wrapper extracted on
+  either.
+
+- [shadow_v4cat_octave_cisc_sugar.md](shadow_v4cat_octave_cisc_sugar.md)
+  — promissory cell. The 16 CISC sugar verbs (`introduce_break`,
+  `introduce_object`, `witness`, `lineage_witness`, `refine`,
+  `defer`, `promote`, `boundary`, `tropical_min`/`tropical_max`,
+  `origin`, `first_seen`, `status`, `retroactive_gap`, `lineage`,
+  `inherited_breaks`) catalogued for `v4cat-octave-cisc` sub-fire.
+
+- [shadow_v4cat_octave_framework_seed.md](shadow_v4cat_octave_framework_seed.md)
+  — promissory cell. Ports `v4cat/src/v4cat/framework_seed.sql`
+  (5 node-types + 18 edge-kinds + 10 K-ATTR breaks) to Octave
+  struct-of-arrays form so type-strict mode is reachable.
+
+- [shadow_v4cat_octave_vcif_profiles.md](shadow_v4cat_octave_vcif_profiles.md)
+  — promissory cell. Extends VCIF round-trip beyond `snapshot` to
+  the other five profiles (patch, vocabulary, recognizer-package,
+  closure-report, residue-report).
+
+- [shadow_v4cat_octave_classdef.md](shadow_v4cat_octave_classdef.md)
+  — promissory cell. Optional `classdef` wrapper around the
+  function/struct API, deferred until the API stabilises.
+
+- [shadow_v4cat_octave_edge_strict.md](shadow_v4cat_octave_edge_strict.md)
+  — promissory cell. The strict-mode complement of
+  geometric-currying: emits residue when boundary nodes aren't
+  pre-introduced. Best paired with the framework-seed sub-fire so
+  type-strict mode is end-to-end usable when both close.
+
 ## Workspace project tracking (DBE+RFS+S2G fire, 2026-05-05)
 
 A new SoT split: GitHub Issues + the org-level Project become

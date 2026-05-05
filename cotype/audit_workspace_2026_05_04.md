@@ -24,7 +24,8 @@ by shadow-architecture's meta-S₃ rotation across multi-arc sessions.
 | vcif-hlo | [v4cat-oss/vcif-hlo](https://github.com/v4cat-oss/vcif-hlo) | 58 | Data-at-rest carrier — tensor/OpenHLO substrate |
 | v4cat-certify | [v4cat-oss/v4cat-certify](https://github.com/v4cat-oss/v4cat-certify) | 37 | Workspace certification — V₄ closure-check over workspace claims |
 | agda2v4cat | [v4cat-oss/agda2v4cat](https://github.com/v4cat-oss/agda2v4cat) | TBD (Haskell + 1 Python smoke-test) | Catalogue source — Agda → VCIF extractor |
-| **Total** | | **~384 + agda2v4cat tests** | |
+| v4cat-octave | [v4cat-oss/v4cat-octave](https://github.com/v4cat-oss/v4cat-octave) | 7 (Octave) + parity-check.sh | Reference carrier — algebraic Octave reimplementation of v4cat's RISC core |
+| **Total** | | **~384 + agda2v4cat + 7 (Octave)** | |
 
 Cotype size: 31 shadow_*.md files plus index, audit, methodology files.
 
@@ -68,6 +69,7 @@ Six fires across this trajectory, each with a recorded shadow:
 | 8 | G1 closure (cross-substrate parity tests) | #8 DBE-led | this file (closure section below) | [vcif-hlo#3][h3] |
 | 9 | G2 closure (v4cat-certify suite) | #8 | shadow_workspace_certification.md | [methodology#7][m7] |
 | 10 | agda2v4cat v0.1 (catalogue source — Agda) | #8 DBE-led | shadow_agda2v4cat_distribution.md + shadow_agda_ffi_gap.md + 10 per-item `shadow_agda_extraction_gap_<item>.md` | [methodology#8][m8] |
+| 11 | v4cat-octave v0.1 (reference carrier — Octave) | #8 DBE+RFS+S2G | shadow_v4cat_octave_distribution.md + 5 per-future-fire `shadow_v4cat_octave_<topic>.md` | [methodology#9][m9] |
 
 [m3]: https://github.com/v4cat-oss/methodology/issues/3
 [m4]: https://github.com/v4cat-oss/methodology/issues/4
@@ -75,6 +77,7 @@ Six fires across this trajectory, each with a recorded shadow:
 [m6]: https://github.com/v4cat-oss/methodology/issues/6
 [m7]: https://github.com/v4cat-oss/methodology/issues/7
 [m8]: https://github.com/v4cat-oss/methodology/issues/8
+[m9]: https://github.com/v4cat-oss/methodology/issues/9
 [v1]: https://github.com/v4cat-oss/v4cat/issues/1
 [v2]: https://github.com/v4cat-oss/v4cat/issues/2
 [v3]: https://github.com/v4cat-oss/v4cat/issues/3
