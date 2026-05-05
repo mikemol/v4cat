@@ -306,7 +306,22 @@ of v4cat to v4cat.
   substrate parity tests; G2: automated coupling-invariant test;
   G3: vcif-hlo bridge round-trip tests; G4: examples as test
   fixtures). The catalogue thickens forward by registering what
-  the catalogue knows it doesn't yet test.
+  the catalogue knows it doesn't yet test. **G1 and G2 closed in
+  same session; G3 and G4 remain open.**
+
+- [shadow_workspace_certification.md](shadow_workspace_certification.md)
+  — closes G2 by introducing
+  [v4cat-oss/v4cat-certify](https://github.com/v4cat-oss/v4cat-certify) v0.1.
+  The **second instance** of v4cat's V₄-closure-check pattern
+  (Theorem 14.5), lifted from framework-internal scope to
+  workspace-wide scope. 8 declared workspace claims, all
+  classified into cell 11 by the runner. Closure-report emitted
+  in all three carrier substrates simultaneously; cross-substrate
+  parity verified at the meta level (the certification suite is
+  itself certified across substrates). Region #8 fire,
+  DBE-dominant. Per discipline rule 6: at 2 instances of the
+  V₄-closure-check pattern, no `ClosureCheck` wrapper extracted;
+  v4cat remains the universal at the kernel-cell.
 
 ## Composition
 

@@ -21,8 +21,9 @@ by shadow-architecture's meta-S₃ rotation across multi-arc sessions.
 | v4cat-mcp | [v4cat-oss/v4cat-mcp](https://github.com/v4cat-oss/v4cat-mcp) | 68 | RPC presentation (Model Context Protocol) |
 | vcif | [v4cat-oss/vcif](https://github.com/v4cat-oss/vcif) | 43 | Data-at-rest carrier — JSON Schema substrate |
 | vcif-rdf | [v4cat-oss/vcif-rdf](https://github.com/v4cat-oss/vcif-rdf) | 22 | Data-at-rest carrier — RDF/SHACL/SPARQL substrate |
-| vcif-hlo | [v4cat-oss/vcif-hlo](https://github.com/v4cat-oss/vcif-hlo) | 50 | Data-at-rest carrier — tensor/OpenHLO substrate |
-| **Total** | | **339** | |
+| vcif-hlo | [v4cat-oss/vcif-hlo](https://github.com/v4cat-oss/vcif-hlo) | 58 | Data-at-rest carrier — tensor/OpenHLO substrate |
+| v4cat-certify | [v4cat-oss/v4cat-certify](https://github.com/v4cat-oss/v4cat-certify) | 37 | Workspace certification — V₄ closure-check over workspace claims |
+| **Total** | | **384** | |
 
 Cotype size: 31 shadow_*.md files plus index, audit, methodology files.
 
@@ -64,6 +65,7 @@ Six fires across this trajectory, each with a recorded shadow:
 | 6 | vcif-hlo v0.1 (tensor carrier) | #8 DBE-dominant | shadow_vcif_hlo_distribution.md + shadow_stablehlo_export_gap.md |
 | 7 | This audit | **#4 (S2G alone)** | this file |
 | 8 | G1 closure (cross-substrate parity tests) | #8 DBE-led | this file (closure section below) |
+| 9 | G2 closure (v4cat-certify suite) | #8 | shadow_workspace_certification.md |
 
 Meta-S₃ rotation observed across the trajectory:
 
@@ -79,8 +81,8 @@ Each gap below names a structural commitment the workspace honours
 *by design* but does not yet *test or enforce*. None is a discipline
 violation; each is a candidate for a future small fire.
 
-**Status as of 2026-05-04 (later in same session)**: G1 closed
-(see below). G2, G3, G4 remain open.
+**Status as of 2026-05-04 (later in same session)**: G1 and G2
+closed (see below). G3 and G4 remain open.
 
 ### G1 — cross-substrate parity tests ✓ **CLOSED 2026-05-04**
 
@@ -116,22 +118,41 @@ parametrized cross-substrate parity tests in
 - vcif-hlo extractor passes only `Id` tensors through kernels;
   string conversion happens only at the `IdDictionary` boundary.
 
-### G2 — automated coupling-invariant test
+### G2 — automated coupling-invariant test ✓ **CLOSED 2026-05-04**
 
 **Claim**: pyproject.tomls never develop sibling-to-sibling
 runtime deps. v4cat itself depends on nothing.
 
-**Currently tested**: nothing. Discipline is enforced by human
-audit only.
+**Closure**: implemented at
+[v4cat-oss/v4cat-certify](https://github.com/v4cat-oss/v4cat-certify) v0.1
+(initial commit `ac80d44`). The placement question (raised in the
+DBE pass on G2) was resolved by the user's "certification suite"
+counter-framing: the test lives in a *workspace-level* role, not as
+a sibling-of-the-carriers concern. The new repo introduces:
 
-**Future fire**: a small script that parses all five pyproject.tomls
-and asserts: (a) v4cat has no runtime deps; (b) each sibling lists
-v4cat plus its substrate-specific libs (no other v4cat-oss/* deps in
-the runtime set; optional extras are fine). The test should NOT
-live in v4cat itself (kernel doesn't know about presentations).
-Cleanest home: a new `v4cat-oss/audit` repo (region #8 fire to
-introduce that), or as a script in any one of the presentation
-repos that imports the others' metadata.
+- **WorkspaceClaim** + 8 named claims including
+  `claim:v4cat-zero-runtime-deps` and
+  `claim:no-sibling-runtime-deps` (the original G2 invariants).
+- **V₄ closure-report** classifying every claim into
+  `{11 honest, 10 uncatalogued, 01 unimplemented, 00 absent}`.
+- **Three-substrate emission**: closure-reports in vcif JSON,
+  vcif-rdf Turtle, vcif-hlo JSON tensor dump simultaneously, with
+  a meta-level cross-substrate parity test verifying the three
+  emissions agree.
+- **CLI**: `v4cat-certify {run, report, claims, status}`.
+
+**Discipline**: per shadow-architecture rule 6, this is the
+**second instance** of the V₄-closure-check pattern (the first
+being v4cat's Theorem 14.5). Two instances; below the C7 ≥3
+threshold; orbit-driven; **S2G to catalogue, no `ClosureCheck`
+wrapper extracted**. v4cat itself remains the universal at the
+kernel-cell.
+
+See [shadow_workspace_certification.md](shadow_workspace_certification.md)
+for the structural shadow.
+
+37 v4cat-certify tests green. 6 distributions in workspace now;
+total tests: 384 across the workspace.
 
 ### G3 — bridge round-trip tests for vcif-hlo
 
