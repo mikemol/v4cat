@@ -1,5 +1,7 @@
 # Shadow: missing v4cat event-log API (promissory cell)
 
+**Tracking**: [v4cat-oss/methodology#11](https://github.com/v4cat-oss/methodology/issues/11) (tracker — closes when [v4cat-oss/v4cat#10 gc-v4cat-path-isa-verbs](https://github.com/v4cat-oss/v4cat/issues/10) closes; status canonical there per [shadow_workspace_project_tracking.md](shadow_workspace_project_tracking.md)).
+
 > *S2G fire of 2026-05-04 (Stage 2 of the algebraic-foundations arc).
 > **At orbit-position 1** (just v4cat itself); per discipline rule 6,
 > S2G to catalogue the gap, NOT RFS to extract a wrapper. Algebraic

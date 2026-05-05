@@ -1,5 +1,7 @@
 # Shadow: StableHLO export gap (promissory cell)
 
+**Tracking**: [v4cat-oss/vcif-hlo#5](https://github.com/v4cat-oss/vcif-hlo/issues/5) (status canonical there per [shadow_workspace_project_tracking.md](shadow_workspace_project_tracking.md)).
+
 > *S2G fire of 2026-05-04 (Stage 3 of the algebraic-foundations arc).
 > **At orbit-position 1** (just vcif-hlo's NumPy backend); per discipline
 > rule 6, S2G to catalogue the gap, NOT RFS to extract a wrapper.

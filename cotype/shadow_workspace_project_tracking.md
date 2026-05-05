@@ -130,6 +130,48 @@ Worked example (the agda2v4cat-Tier-3 expansion):
 - When the 10th Tier-3 child closes → parent epic closes → the
   entire subtree archives in one sweep.
 
+### Promissory-shadow-has-issue rule (added 2026-05-05)
+
+> Every shadow that names a *promissory cell* (a structural
+> commitment with a `Closure path` or `When this shadow closes`
+> section) must have a corresponding GitHub issue and a
+> `Tracking:` line near the top pointing at that issue.
+
+This is the SoT-split discipline applied to its own corpus: the
+cotype is canonical for *structure*, but for the **subset of
+shadows that name future work**, the GitHub Project board must
+have a parallel item so status (open / in-progress / closed) is
+queryable.
+
+Auditable invariant: a workspace audit can `grep -L 'Tracking:'
+cotype/shadow_*.md | xargs grep -l 'promissory cell\|Closure
+path'` and the result must be empty.
+
+Origin: a 2026-05-05 epic-shape audit (region #4 fire #13)
+discovered two promissory shadows (`shadow_event_log_gap.md`,
+`shadow_stablehlo_export_gap.md`) catalogued in cotype but
+without issues — invisible on the Project board. Both got
+issues; this rule was added so future audits can mechanically
+verify the invariant.
+
+### Epic-shape recognition rule (added 2026-05-05)
+
+> An open issue should be promoted to an `epic` when its body
+> lists ≥2 independently-closeable closure-path components AND
+> implementation work has begun (or is imminent).
+
+The "implementation has begun" qualifier prevents premature
+epic-promotion: many promissory shadows enumerate fine-grained
+closure paths that are tightly coupled at implementation time.
+Splitting into sub-issues only when the work starts keeps the
+Project board's epic-shape signal honest.
+
+Counter-pattern: a closure-path-multi-component issue that
+ships in a single PR is operationally region-#5-flirting (DBE
+and RFS, without per-step S2G). The epic + sub-issues
+structure makes partial progress visible and keeps the lattice
+region honest.
+
 ### Audit-rederivation procedure
 
 The next workspace audit fire (a region #4 cataloguing fire)
