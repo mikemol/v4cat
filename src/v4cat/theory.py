@@ -112,6 +112,15 @@ SIGNATURE: list[Cell] = [
          'Scope declaration for the closure check'),
     Cell('Q-bootstrap-closure', Kind.B,
          'Preservation theorem of Theorem 14.5'),
+
+    # =================================================================
+    # HF-GeometricCurrying vocabulary (kind B; landed at fire #14)
+    # =================================================================
+
+    Cell('Q-geometric-currying-vocabulary', Kind.B,
+         'Umbrella break: framework introduces 11 node-kinds + 17 '
+         'edge-kinds for the geometric-currying substrate per '
+         'cotype/shadow_geometric_currying.md'),
 ]
 
 

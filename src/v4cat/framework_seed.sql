@@ -364,3 +364,158 @@ INSERT OR IGNORE INTO witnesses (spec_id, break_number, kind, notes) VALUES
     ('tension', 'K-ATTR-SHAPE',           'admits-attr',   NULL),
     ('tension', 'K-ATTR-PARAMETERS',      'admits-attr',   NULL),
     ('tension', 'K-ATTR-NOTES',           'admits-attr',   NULL);
+
+-- =============================================================================
+-- S13 — HF-GeometricCurrying vocabulary (geometric-currying substrate)
+--
+-- Per cotype/shadow_geometric_currying.md: 11 new node-kinds + 17 new
+-- edge-kinds defining the self-hosted vocabulary for the geometric
+-- currying substrate. All entries are ordinary v4cat nodes occupying
+-- node-type or edge-kind positions; per the carrier-vs-object
+-- discipline, none are first-class properties.
+--
+-- Closes the v4cat-side of cotype/shadow_geometric_currying_v4cat_refactor.md
+-- vocabulary item.
+-- =============================================================================
+
+-- Umbrella break for HF-GeometricCurrying vocabulary catalogue-introduction
+INSERT OR IGNORE INTO breaks (number, name, short_desc) VALUES
+    ('Q-geometric-currying-vocabulary',
+     'HF-GeometricCurrying vocabulary',
+     'Umbrella break: the framework introduces 11 + 17 self-hosted vocabulary nodes for the geometric-currying substrate.');
+
+-- ----- 11 new node-kinds -----------------------------------------------------
+INSERT OR IGNORE INTO specs (id, name, year, catalogue_order, notes) VALUES
+    ('Cell',              'Cell',              NULL, NULL,
+     'Type-token: a cell at any grade in the geometric-currying substrate.'),
+    ('NodeCell',          'NodeCell',          NULL, NULL,
+     'Type-token: grade-0 cell (node-like 0-cell).'),
+    ('EdgeCell',          'EdgeCell',          NULL, NULL,
+     'Type-token: grade-2 cell with three role-boundaries (source, kind, target).'),
+    ('RoleBinding',       'RoleBinding',       NULL, NULL,
+     'Type-token: a grade-1 role-binding event ρ_r(e, x).'),
+    ('Boundary',          'Boundary',          NULL, NULL,
+     'Type-token: collection of role-bindings forming a cell''s ∂.'),
+    ('Path',              'Path',              NULL, NULL,
+     'Type-token: an oriented traversal through closed cells.'),
+    ('PathStep',          'PathStep',          NULL, NULL,
+     'Type-token: one step within a Path.'),
+    ('PathPresentation',  'PathPresentation',  NULL, NULL,
+     'Type-token: a vector / chronological rendering of a Path.'),
+    ('PathSnapshot',      'PathSnapshot',      NULL, NULL,
+     'Type-token: a presentation pinned to a state-snapshot.'),
+    ('ClosureObligation', 'ClosureObligation', NULL, NULL,
+     'Type-token: a not-yet-discharged closure requirement.'),
+    ('RoleHorn',          'RoleHorn',          NULL, NULL,
+     'Type-token: a partial boundary (two of three roles closed).');
+
+-- ----- 17 new edge-kinds -----------------------------------------------------
+INSERT OR IGNORE INTO specs (id, name, year, catalogue_order, notes) VALUES
+    ('has-cell-kind',          'has-cell-kind',          NULL, NULL,
+     'Edge-kind: cell → cell-kind anchor.'),
+    ('has-boundary',           'has-boundary',           NULL, NULL,
+     'Edge-kind: cell → boundary.'),
+    ('has-role-binding',       'has-role-binding',       NULL, NULL,
+     'Edge-kind: cell → role-binding.'),
+    ('role-of-cell',           'role-of-cell',           NULL, NULL,
+     'Edge-kind: role-binding → cell (inverse of has-role-binding).'),
+    ('role-name',              'role-name',              NULL, NULL,
+     'Edge-kind: role-binding → role-token (source / kind / target).'),
+    ('role-occupant',          'role-occupant',          NULL, NULL,
+     'Edge-kind: role-binding → identity filling the role.'),
+    ('source-role',            'source-role',            NULL, NULL,
+     'Edge-kind: edge-cell → its source role-binding.'),
+    ('kind-role',              'kind-role',              NULL, NULL,
+     'Edge-kind: edge-cell → its kind role-binding.'),
+    ('target-role',            'target-role',            NULL, NULL,
+     'Edge-kind: edge-cell → its target role-binding.'),
+    ('boundary-of',            'boundary-of',            NULL, NULL,
+     'Edge-kind: boundary → cell (inverse of has-boundary).'),
+    ('closes-role',            'closes-role',            NULL, NULL,
+     'Edge-kind: closure-event → role-binding.'),
+    ('closes-cell',            'closes-cell',            NULL, NULL,
+     'Edge-kind: closure-event → cell.'),
+    ('path-advances-through',  'path-advances-through',  NULL, NULL,
+     'Edge-kind: path-step → cell.'),
+    ('blocked-by-boundary',    'blocked-by-boundary',    NULL, NULL,
+     'Edge-kind: path-step → open boundary that prevents advance.'),
+    ('presents-path',          'presents-path',          NULL, NULL,
+     'Edge-kind: path-presentation → path.'),
+    ('snapshot-of',            'snapshot-of',            NULL, NULL,
+     'Edge-kind: path-snapshot → path-presentation.'),
+    ('projects-as-edge',       'projects-as-edge',       NULL, NULL,
+     'Edge-kind: closed edge-cell → its saturated edge projection.');
+
+-- Type attributes for the 11 new node-kinds + 17 new edge-kinds.
+INSERT OR IGNORE INTO spec_attributes (spec_id, name, value) VALUES
+    -- 11 node-kinds
+    ('Cell',              'type', 'node-type'),
+    ('NodeCell',          'type', 'node-type'),
+    ('EdgeCell',          'type', 'node-type'),
+    ('RoleBinding',       'type', 'node-type'),
+    ('Boundary',          'type', 'node-type'),
+    ('Path',              'type', 'node-type'),
+    ('PathStep',          'type', 'node-type'),
+    ('PathPresentation',  'type', 'node-type'),
+    ('PathSnapshot',      'type', 'node-type'),
+    ('ClosureObligation', 'type', 'node-type'),
+    ('RoleHorn',          'type', 'node-type'),
+
+    -- 17 edge-kinds: type='edge-kind' + source-type + target-type
+    ('has-cell-kind',         'type',        'edge-kind'),
+    ('has-cell-kind',         'source-type', 'spec'),
+    ('has-cell-kind',         'target-type', 'spec'),
+    ('has-boundary',          'type',        'edge-kind'),
+    ('has-boundary',          'source-type', 'spec'),
+    ('has-boundary',          'target-type', 'spec'),
+    ('has-role-binding',      'type',        'edge-kind'),
+    ('has-role-binding',      'source-type', 'spec'),
+    ('has-role-binding',      'target-type', 'spec'),
+    ('role-of-cell',          'type',        'edge-kind'),
+    ('role-of-cell',          'source-type', 'spec'),
+    ('role-of-cell',          'target-type', 'spec'),
+    ('role-name',             'type',        'edge-kind'),
+    ('role-name',             'source-type', 'spec'),
+    ('role-name',             'target-type', 'spec'),
+    ('role-occupant',         'type',        'edge-kind'),
+    ('role-occupant',         'source-type', 'spec'),
+    ('role-occupant',         'target-type', 'spec'),
+    ('source-role',           'type',        'edge-kind'),
+    ('source-role',           'source-type', 'spec'),
+    ('source-role',           'target-type', 'spec'),
+    ('kind-role',             'type',        'edge-kind'),
+    ('kind-role',             'source-type', 'spec'),
+    ('kind-role',             'target-type', 'spec'),
+    ('target-role',           'type',        'edge-kind'),
+    ('target-role',           'source-type', 'spec'),
+    ('target-role',           'target-type', 'spec'),
+    ('boundary-of',           'type',        'edge-kind'),
+    ('boundary-of',           'source-type', 'spec'),
+    ('boundary-of',           'target-type', 'spec'),
+    ('closes-role',           'type',        'edge-kind'),
+    ('closes-role',           'source-type', 'spec'),
+    ('closes-role',           'target-type', 'spec'),
+    ('closes-cell',           'type',        'edge-kind'),
+    ('closes-cell',           'source-type', 'spec'),
+    ('closes-cell',           'target-type', 'spec'),
+    ('path-advances-through', 'type',        'edge-kind'),
+    ('path-advances-through', 'source-type', 'spec'),
+    ('path-advances-through', 'target-type', 'spec'),
+    ('blocked-by-boundary',   'type',        'edge-kind'),
+    ('blocked-by-boundary',   'source-type', 'spec'),
+    ('blocked-by-boundary',   'target-type', 'spec'),
+    ('presents-path',         'type',        'edge-kind'),
+    ('presents-path',         'source-type', 'spec'),
+    ('presents-path',         'target-type', 'spec'),
+    ('snapshot-of',           'type',        'edge-kind'),
+    ('snapshot-of',           'source-type', 'spec'),
+    ('snapshot-of',           'target-type', 'spec'),
+    ('projects-as-edge',      'type',        'edge-kind'),
+    ('projects-as-edge',      'source-type', 'spec'),
+    ('projects-as-edge',      'target-type', 'spec');
+
+-- Witness the umbrella break to record framework-introduces of the vocabulary.
+INSERT OR IGNORE INTO witnesses (spec_id, break_number, kind, notes, scope) VALUES
+    ('framework', 'Q-geometric-currying-vocabulary', 'catalogue-introduces',
+     'HF-GeometricCurrying: 11 node-kinds + 17 edge-kinds for the geometric-currying substrate.',
+     'spec');
