@@ -133,3 +133,37 @@ filled.
 
 Until then, this shadow stands as a registered structural commitment
 the framework has *named* but not yet *implemented*.
+
+## Substrate update (2026-05-05)
+
+The path-identity primitive this gap was missing — what makes
+two paths *the same path* even when their vector presentations
+differ — has been supplied by
+[shadow_geometric_currying.md](shadow_geometric_currying.md):
+**closure-before-traversal**. A path is identified by its
+sequence of closed cells; the vector is a presentation of that
+sequence; identity is "same closed cells, same order, same
+orientation."
+
+Concretely, the geometric-currying shadow's *path-advancement
+cover* (kquery over `(scheduled cells, closed cells)`) is the V₄
+classifier the event-log API's `record / replay / invert`
+operations should be well-typed under:
+
+```text
+record  := append a step (cell_id) to a path; precondition: cell is closed
+replay  := re-derive the cell sequence from the closure history
+invert  := reverse traversal under boundary closure
+```
+
+The remaining work for actual closure is the geometric-currying
+migration's per-repo fires — especially
+[`shadow_geometric_currying_v4cat_refactor.md`](shadow_geometric_currying_v4cat_refactor.md)
+(which introduces the cell layer and surfaces path operations
+as ISA verbs). When that lands, this shadow's promissory-cell
+list above can be filled out: `cat.events.append`,
+`cat.events.replay`, `cat.events.invert` become the natural
+ISA-verb names for the three operations.
+
+The gap remains promissory until the migration lands; this
+update names the substrate the gap was structurally missing.

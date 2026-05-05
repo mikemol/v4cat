@@ -425,6 +425,83 @@ chart in `theory.md` § 15.
   pre-introduced. Best paired with the framework-seed sub-fire so
   type-strict mode is end-to-end usable when both close.
 
+## Geometric currying substrate (DBE+RFS+S2G fire, 2026-05-05)
+
+A recognition-led fire that names a new semantic substrate
+beneath the existing RISC projection: edges are not typed
+relation rows but **closed event-cells whose boundaries contain
+three role obligations** (source / kind / target). The current
+permissiveness of v4cat's `edge()` becomes intentional rather
+than accidental; closure-before-traversal supplies the
+path-identity primitive the
+[event-log gap](shadow_event_log_gap.md) was missing.
+
+The substrate is named here; the cross-repo migration is named
+as seven per-future-fire promissory shadows. Each promissory
+closes inside one repo; their epic is workspace-level (cross-
+repo) and lives in the methodology repo.
+
+- [shadow_geometric_currying.md](shadow_geometric_currying.md)
+  — the central structural shadow. 11 new node-kinds + 17 new
+  edge-kinds defining HF-GeometricCurrying. Three new closure
+  covers (boundary-closure, cell-closure, path-advancement).
+  Disambiguates the existing `CellReferent` (kquery cell) from
+  the new `EventCell` (geometric cell). Region #8 fire,
+  recognition-led. Per discipline rule 6: orbit position 1 of
+  "geometric semantic substrate"; no `CellFramework` wrapper
+  extracted.
+
+- [shadow_geometric_currying_v4cat_refactor.md](shadow_geometric_currying_v4cat_refactor.md)
+  — promissory cell. Internal cell layer in v4cat: introduces
+  `introduce_cell` / `bind_role` / `close_boundary` /
+  `close_cell` / `advance_path` underneath the existing public
+  RISC API. Adds the HF-GeometricCurrying vocabulary to
+  `framework_seed.sql` and ships the four T-* closure
+  recognizers as bootstrap tensions. The load-bearing sub-fire;
+  recommended ordering: lands first.
+
+- [shadow_geometric_currying_vcif_carrier.md](shadow_geometric_currying_vcif_carrier.md)
+  — promissory cell. Adds `cells`, `role_bindings`,
+  `boundaries`, `path_presentations` sections to the VCIF
+  schema; the compact `{source, kind, target}` form remains as
+  a saturated projection.
+
+- [shadow_geometric_currying_vcif_rdf_carrier.md](shadow_geometric_currying_vcif_rdf_carrier.md)
+  — promissory cell. Adds `vc:CellAssertion` + `vc:RoleBinding`
+  shapes to vcif-rdf; resolves the `CellAssertion` name
+  collision (rename existing to `KqueryCellAssertion`); SHACL
+  Layer 2 extended to enforce edge-projection-backed-by-cell.
+
+- [shadow_geometric_currying_vcif_hlo_carrier.md](shadow_geometric_currying_vcif_hlo_carrier.md)
+  — promissory cell. Adds `role_source_closed` /
+  `role_kind_closed` / `role_target_closed` Bool tensors to
+  vcif-hlo; `edge_closed` is their elementwise AND. Fusion-
+  friendly compilation to OpenHLO ops.
+
+- [shadow_geometric_currying_agda2v4cat_permissive.md](shadow_geometric_currying_agda2v4cat_permissive.md)
+  — promissory cell. Strips agda2v4cat's pre-emission anchor
+  ceremony; the importer trusts the geometric-currying
+  semantics in the receiving v4cat catalogue.
+
+- [shadow_geometric_currying_certify_checks.md](shadow_geometric_currying_certify_checks.md)
+  — promissory cell. Four new `claim:*` entries in the
+  v4cat-certify suite auditing the substrate's invariants
+  (boundaries closed, paths advance only through closed cells,
+  presentations oriented + audited, saturated edges backed by
+  cells). Recommended ordering: lands last.
+
+- [shadow_geometric_currying_octave_role_matrices.md](shadow_geometric_currying_octave_role_matrices.md)
+  — promissory cell. Adds explicit role-matrix encoding to
+  v4cat-octave so role closure is sparse-matrix algebra. Pairs
+  with v4cat-octave's existing `edge_strict` and
+  `framework_seed` promissories.
+
+This fire annotates [shadow_event_log_gap.md](shadow_event_log_gap.md)
+with a "Substrate update (2026-05-05)" pointer: the
+path-identity primitive the gap was missing is supplied by
+closure-before-traversal. The gap remains promissory until the
+per-repo migration lands.
+
 ## Workspace project tracking (DBE+RFS+S2G fire, 2026-05-05)
 
 A new SoT split: GitHub Issues + the org-level Project become

@@ -70,6 +70,7 @@ Six fires across this trajectory, each with a recorded shadow:
 | 9 | G2 closure (v4cat-certify suite) | #8 | shadow_workspace_certification.md | [methodology#7][m7] |
 | 10 | agda2v4cat v0.1 (catalogue source — Agda) | #8 DBE-led | shadow_agda2v4cat_distribution.md + shadow_agda_ffi_gap.md + 10 per-item `shadow_agda_extraction_gap_<item>.md` | [methodology#8][m8] |
 | 11 | v4cat-octave v0.1 (reference carrier — Octave) | #8 DBE+RFS+S2G | shadow_v4cat_octave_distribution.md + 5 per-future-fire `shadow_v4cat_octave_<topic>.md` | [methodology#9][m9] |
+| 12 | geometric-currying semantic substrate (recognition + 7 migration promissories) | #8 DBE+RFS+S2G recognition-led | shadow_geometric_currying.md + 7 per-repo `shadow_geometric_currying_<repo>.md` + closure-trail update on shadow_event_log_gap.md | [v4cat#4][v4] |
 
 [m3]: https://github.com/v4cat-oss/methodology/issues/3
 [m4]: https://github.com/v4cat-oss/methodology/issues/4
@@ -81,6 +82,7 @@ Six fires across this trajectory, each with a recorded shadow:
 [v1]: https://github.com/v4cat-oss/v4cat/issues/1
 [v2]: https://github.com/v4cat-oss/v4cat/issues/2
 [v3]: https://github.com/v4cat-oss/v4cat/issues/3
+[v4]: https://github.com/v4cat-oss/v4cat/issues/4
 [h3]: https://github.com/v4cat-oss/vcif-hlo/issues/3
 
 Meta-S₃ rotation observed across the trajectory:
