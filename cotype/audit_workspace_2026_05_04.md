@@ -16,7 +16,7 @@ by shadow-architecture's meta-S₃ rotation across multi-arc sessions.
 ## Aggregate state
 
 | Distribution | Repo | Tests | Role |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | v4cat | [v4cat-oss/v4cat](https://github.com/v4cat-oss/v4cat) | 156 | Kernel — RISC ISA + schema + kquery |
 | v4cat-mcp | [v4cat-oss/v4cat-mcp](https://github.com/v4cat-oss/v4cat-mcp) | 68 | RPC presentation (Model Context Protocol) |
 | vcif | [v4cat-oss/vcif](https://github.com/v4cat-oss/vcif) | 43 | Data-at-rest carrier — JSON Schema substrate |
@@ -29,7 +29,7 @@ Cotype size: 31 shadow_*.md files plus index, audit, methodology files.
 ## Discipline checks (all passing)
 
 | Rule | Status |
-|---|---|
+| --- | --- |
 | 1. Sideways grid moves are S2G; up-grade extractions are RFS | ✓ |
 | 2. Mid-session region-transitions are symmetry-discoveries (not errors) | ✓ |
 | 3. Forbidden region #3 (RFS-only) avoided | ✓ — no fire fits |
@@ -55,7 +55,7 @@ Carrier-vs-object discipline:
 Six fires across this trajectory, each with a recorded shadow:
 
 | # | Fire | Region | Shadow file |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | 1 | v4cat ↔ v4cat-mcp split | #8 | shadow_distribution_seam_mcp.md |
 | 2 | VCIF v0.1 (JSON carrier) | #8 | shadow_vcif_distribution.md |
 | 3 | Group-theoretic reading | #8 RFS-dominant | shadow_assertion_history_group.md (+6 algebraic-anchor footers) |
@@ -63,6 +63,7 @@ Six fires across this trajectory, each with a recorded shadow:
 | 5 | (depth × substrate) carrier grid | #8 + #4 | shadow_carrier_grid.md + shadow_event_log_gap.md |
 | 6 | vcif-hlo v0.1 (tensor carrier) | #8 DBE-dominant | shadow_vcif_hlo_distribution.md + shadow_stablehlo_export_gap.md |
 | 7 | This audit | **#4 (S2G alone)** | this file |
+| 8 | G1 closure (cross-substrate parity tests) | #8 DBE-led | this file (closure section below) |
 
 Meta-S₃ rotation observed across the trajectory:
 
@@ -78,26 +79,42 @@ Each gap below names a structural commitment the workspace honours
 *by design* but does not yet *test or enforce*. None is a discipline
 violation; each is a candidate for a future small fire.
 
-### G1 — cross-substrate parity tests
+**Status as of 2026-05-04 (later in same session)**: G1 closed
+(see below). G2, G3, G4 remain open.
+
+### G1 — cross-substrate parity tests ✓ **CLOSED 2026-05-04**
 
 **Claim**: a snapshot read from any of {vcif, vcif-rdf, vcif-hlo} and
 classified by kquery yields *identical* V₄ cell membership.
 
-**Currently tested**: vcif↔vcif-hlo, but only at node/edge count
-granularity ([vcif-hlo/test_parity.py:51-83](https://github.com/v4cat-oss/vcif-hlo/blob/main/src/vcif_hlo/tests/test_parity.py#L51-L83)).
-The two other pairs (vcif↔vcif-rdf, vcif-rdf↔vcif-hlo) and the
-all-three convergence are untested.
+**Closure**: implemented at vcif-hlo commit `c0c6d48`. Adds 8
+parametrized cross-substrate parity tests in
+[vcif-hlo/src/vcif_hlo/tests/test_parity.py](https://github.com/v4cat-oss/vcif-hlo/blob/main/src/vcif_hlo/tests/test_parity.py):
 
-**Future fire**: a small parameterized test set that:
+- **Two fixtures**: `PARITY_SYNTHETIC` (4-cell coverage — one
+  identifier in each of {00, 01, 10, 11}) and `PARITY_HF_DBE`
+  (boundary case — only cell 11 has a member).
+- **Three substrate extractors** (`cells_via_vcif`,
+  `cells_via_vcif_rdf`, `cells_via_vcif_hlo`), each returning the
+  *parity_canonical_form* — `{cell: sorted[str]}` of identifier
+  strings.
+- **3 pairings × 2 fixtures = 6 pairwise parity tests** plus **2
+  all-three convergence tests** = 8 total.
+- All 8 pass on first run; vcif-hlo test count rises 50 → 58.
 
-1. Loads `agda-import` and `hf-dbe-closure` fixtures via each
-   substrate's loader.
-2. Runs an identical kquery against the same `(A, B; U)` triple in
-   each.
-3. Asserts cell-membership equality, not just counts.
+**Shadows produced** (DBE costructure now realised):
 
-Lives most cleanly in vcif-hlo (which already has bridges to both
-JSON and RDF inputs).
+- `parity_canonical_form` — the renaming-canonicalised cells dict
+  every extractor returns.
+- `parity_check_function` — the pairwise comparison pattern.
+
+**Discipline preserved**:
+
+- vcif extractor uses literal-only set_exprs (no `eval`/`exec`).
+- vcif-rdf extractor constructs `ex:inSet` as a `vc:NodeAssertion`
+  (never as an RDF predicate) — carrier-vs-object discipline holds.
+- vcif-hlo extractor passes only `Id` tensors through kernels;
+  string conversion happens only at the `IdDictionary` boundary.
 
 ### G2 — automated coupling-invariant test
 
