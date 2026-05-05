@@ -67,7 +67,7 @@ Six fires across this trajectory, each with a recorded shadow:
 | 7 | This audit | **#4 (S2G alone)** | this file |
 | 8 | G1 closure (cross-substrate parity tests) | #8 DBE-led | this file (closure section below) |
 | 9 | G2 closure (v4cat-certify suite) | #8 | shadow_workspace_certification.md |
-| 10 | agda2v4cat v0.1 (catalogue source — Agda) | #8 DBE-led | shadow_agda2v4cat_distribution.md + shadow_agda_ffi_gap.md + shadow_agda_extraction_gap_tier3.md |
+| 10 | agda2v4cat v0.1 (catalogue source — Agda) | #8 DBE-led | shadow_agda2v4cat_distribution.md + shadow_agda_ffi_gap.md + 10 per-item `shadow_agda_extraction_gap_<item>.md` |
 
 Meta-S₃ rotation observed across the trajectory:
 

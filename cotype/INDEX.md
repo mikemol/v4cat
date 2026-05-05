@@ -349,13 +349,22 @@ A new role distinct from kernel / RPC / carriers / certification:
   alone). Closes when agda2v4cat ≥ v0.2 ships an `Agda2V4cat.FFI`
   module + Agda-side `V4cat` library.
 
-- [shadow_agda_extraction_gap_tier3.md](shadow_agda_extraction_gap_tier3.md)
-  — promissory cell. Names the 10 deferred Tier-3 extraction
-  items (pragmas, termination, coverage, polarity, foreign,
-  open/using, pattern synonyms, generalizable variables,
-  where-clauses, mutual blocks) so future v0.x fires pick up
-  from named substructure. Region #4 (S2G alone). Closes
-  incrementally as v0.x fires implement each item.
+- Tier-3 extraction gap shadows — ten per-item promissory cells
+  for the deferred extraction items. Each names its source-in-Agda,
+  its expected node-kind, and its expected edge-kind, so a future
+  v0.x sub-fire picks up from named substructure. Region #4 (S2G
+  alone). Closes incrementally; future-fire grouping suggested in
+  each shadow:
+  - [shadow_agda_extraction_gap_pragmas.md](shadow_agda_extraction_gap_pragmas.md) (item 14)
+  - [shadow_agda_extraction_gap_termination.md](shadow_agda_extraction_gap_termination.md) (item 15)
+  - [shadow_agda_extraction_gap_coverage.md](shadow_agda_extraction_gap_coverage.md) (item 16)
+  - [shadow_agda_extraction_gap_polarity.md](shadow_agda_extraction_gap_polarity.md) (item 17)
+  - [shadow_agda_extraction_gap_foreign.md](shadow_agda_extraction_gap_foreign.md) (item 20)
+  - [shadow_agda_extraction_gap_import_directives.md](shadow_agda_extraction_gap_import_directives.md) (item 21)
+  - [shadow_agda_extraction_gap_pattern_synonyms.md](shadow_agda_extraction_gap_pattern_synonyms.md) (item 22)
+  - [shadow_agda_extraction_gap_generalizable_vars.md](shadow_agda_extraction_gap_generalizable_vars.md) (item 23)
+  - [shadow_agda_extraction_gap_where_clauses.md](shadow_agda_extraction_gap_where_clauses.md) (item 24)
+  - [shadow_agda_extraction_gap_mutual_blocks.md](shadow_agda_extraction_gap_mutual_blocks.md) (item 25)
 
 - [shadow_v4cat_vcif_bootstrap_gap.md](shadow_v4cat_vcif_bootstrap_gap.md)
   — G5 promissory cell, surfaced by agda2v4cat's smoke test.

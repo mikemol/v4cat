@@ -46,8 +46,8 @@ domain — Agda's typechecked internal representation.
   added beyond the original plan: `agda-arg-position` /
   `has-arg-position`, so per-arg edges fan out from per-arg nodes
   rather than collapsing onto the def — required for vcif's
-  edge-uniqueness rule). Tier 3 deferred via
-  `shadow_agda_extraction_gap_tier3.md`.
+  edge-uniqueness rule). Tier 3 deferred as ten per-item
+  promissory shadows (`shadow_agda_extraction_gap_<item>.md`).
 - **Output**: per-module VCIF JSON files (`v4cat.snapshot` profile);
   each validates against vcif's schema. `vcif.apply` ingests with a
   workspace-side bootstrap workaround tracked in
@@ -99,9 +99,10 @@ Region **#8** (DBE + RFS + S2G — substantive structural arc).
   fixture under-demands by ≈4× per the kquery analysis at orbit
   position 1 of "domain extractor for v4cat".
 - **S2G**: this file. Plus
-  [shadow_agda_ffi_gap.md](shadow_agda_ffi_gap.md) and
-  [shadow_agda_extraction_gap_tier3.md](shadow_agda_extraction_gap_tier3.md)
-  as promissory companions.
+  [shadow_agda_ffi_gap.md](shadow_agda_ffi_gap.md) and ten
+  per-item Tier-3 promissory shadows
+  (`shadow_agda_extraction_gap_<item>.md` for items 14–17 + 20–25,
+  one shadow per future v0.x sub-fire).
 
 ### Discipline rule 6 (orbit-saturation) check
 
