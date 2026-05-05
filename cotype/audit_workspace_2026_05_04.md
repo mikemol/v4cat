@@ -23,7 +23,8 @@ by shadow-architecture's meta-S₃ rotation across multi-arc sessions.
 | vcif-rdf | [v4cat-oss/vcif-rdf](https://github.com/v4cat-oss/vcif-rdf) | 22 | Data-at-rest carrier — RDF/SHACL/SPARQL substrate |
 | vcif-hlo | [v4cat-oss/vcif-hlo](https://github.com/v4cat-oss/vcif-hlo) | 58 | Data-at-rest carrier — tensor/OpenHLO substrate |
 | v4cat-certify | [v4cat-oss/v4cat-certify](https://github.com/v4cat-oss/v4cat-certify) | 37 | Workspace certification — V₄ closure-check over workspace claims |
-| **Total** | | **384** | |
+| agda2v4cat | [v4cat-oss/agda2v4cat](https://github.com/v4cat-oss/agda2v4cat) | TBD (Haskell + 1 Python smoke-test) | Catalogue source — Agda → VCIF extractor |
+| **Total** | | **~384 + agda2v4cat tests** | |
 
 Cotype size: 31 shadow_*.md files plus index, audit, methodology files.
 
@@ -66,6 +67,7 @@ Six fires across this trajectory, each with a recorded shadow:
 | 7 | This audit | **#4 (S2G alone)** | this file |
 | 8 | G1 closure (cross-substrate parity tests) | #8 DBE-led | this file (closure section below) |
 | 9 | G2 closure (v4cat-certify suite) | #8 | shadow_workspace_certification.md |
+| 10 | agda2v4cat v0.1 (catalogue source — Agda) | #8 DBE-led | shadow_agda2v4cat_distribution.md + shadow_agda_ffi_gap.md + shadow_agda_extraction_gap_tier3.md |
 
 Meta-S₃ rotation observed across the trajectory:
 
@@ -82,7 +84,8 @@ Each gap below names a structural commitment the workspace honours
 violation; each is a candidate for a future small fire.
 
 **Status as of 2026-05-04 (later in same session)**: G1 and G2
-closed (see below). G3 and G4 remain open.
+closed (see below). G3 and G4 remain open. **G5 added** at the
+end-of-session agda2v4cat fire.
 
 ### G1 — cross-substrate parity tests ✓ **CLOSED 2026-05-04**
 
@@ -180,6 +183,36 @@ themselves only run via `python docs/examples/<script>.py`.
 **Future fire**: small wrapper tests in `test_examples.py` that
 import each example as a module and call its `main()`, asserting
 no exceptions and verifying key outputs.
+
+### G5 — vcif/v4cat bootstrap gap (NEW, surfaced 2026-05-04 by agda2v4cat)
+
+**Claim**: `vcif.apply(doc, catalogue)` works against any
+default-bootstrapped `SymmetryCatalogue` without preliminaries.
+
+**Reality**: it doesn't. `vcif.apply` registers each declared
+node-kind as a node-of-kind `'node-kind'`, but v4cat's
+`framework_seed.sql` does not pre-declare `'node-kind'` as a
+node-type, and `v4cat.introduce_node` is strict: any value passed
+in the type slot must already be a registered node-type. So
+`vcif.apply` immediately fails on the first vocabulary entry —
+including on vcif's own `agda-import.json` fixture.
+
+**Discovered by**: agda2v4cat v0.1's end-to-end smoke test
+(reproduced on the existing fixture, so the gap is upstream of
+agda2v4cat).
+
+**Workaround**: agda2v4cat's smoke test pre-introduces
+`'node-kind'`, `'edge-kind'`, and every per-doc vocabulary entry
+as a node-type before calling `vcif.apply`.
+
+**Future fire**: small change to `vcif/src/vcif/importer.py` to
+dual-register vocabulary entries (first as a node-type, then as a
+node-of-kind=`'node-kind'`) plus a one-line addition to
+`v4cat/src/v4cat/framework_seed.sql` so `'node-kind'` is
+pre-declared symmetrically with `'edge-kind'`.
+
+**Shadow**:
+[shadow_v4cat_vcif_bootstrap_gap.md](shadow_v4cat_vcif_bootstrap_gap.md).
 
 ## What this audit does NOT do
 

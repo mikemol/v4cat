@@ -323,6 +323,50 @@ of v4cat to v4cat.
   V₄-closure-check pattern, no `ClosureCheck` wrapper extracted;
   v4cat remains the universal at the kernel-cell.
 
+## Catalogue sources (DBE+RFS+S2G fire, 2026-05-04)
+
+A new role distinct from kernel / RPC / carriers / certification:
+**catalogue source** — produces VCIF documents from a domain.
+
+- [shadow_agda2v4cat_distribution.md](shadow_agda2v4cat_distribution.md)
+  — first instance of the catalogue-source role, realised at
+  [v4cat-oss/agda2v4cat](https://github.com/v4cat-oss/agda2v4cat).
+  An Agda backend (Haskell, cabal-built, mise-pinned to
+  `cabal 3.10.3.0` + system `/usr/bin/ghc-9.6.6` + Agda library
+  `>=2.6.3 && <2.6.4`) that walks every typechecked definition
+  and emits a `v4cat.snapshot` profile JSON document per Agda
+  module. v0.1 covers Tier 1 + Tier 2 of the kquery 10-cell
+  against vcif's existing `agda-import.json` fixture (15 of 25
+  named items); 19 node-kinds, 18 edge-kinds; bijective slug
+  encoding for non-ID-safe Agda identifiers. Region #8 fire,
+  DBE-led. Per discipline rule 6: at orbit position 1, no
+  `DomainExtractor` wrapper extracted; v4cat remains the
+  universal at the kernel-cell.
+
+- [shadow_agda_ffi_gap.md](shadow_agda_ffi_gap.md) — promissory
+  cell. Agda code calling into v4cat at runtime (FFI) is the
+  v0.2 deliverable; v0.1 ships export-only. Region #4 (S2G
+  alone). Closes when agda2v4cat ≥ v0.2 ships an `Agda2V4cat.FFI`
+  module + Agda-side `V4cat` library.
+
+- [shadow_agda_extraction_gap_tier3.md](shadow_agda_extraction_gap_tier3.md)
+  — promissory cell. Names the 10 deferred Tier-3 extraction
+  items (pragmas, termination, coverage, polarity, foreign,
+  open/using, pattern synonyms, generalizable variables,
+  where-clauses, mutual blocks) so future v0.x fires pick up
+  from named substructure. Region #4 (S2G alone). Closes
+  incrementally as v0.x fires implement each item.
+
+- [shadow_v4cat_vcif_bootstrap_gap.md](shadow_v4cat_vcif_bootstrap_gap.md)
+  — G5 promissory cell, surfaced by agda2v4cat's smoke test.
+  `vcif.apply` registers each declared node-kind as a
+  node-of-kind=`'node-kind'`, but v4cat's framework seed doesn't
+  pre-declare `'node-kind'` as a node-type, so apply against a
+  default-bootstrap catalogue fails immediately on the first
+  vocabulary entry. Closure: dual-register vocabulary entries on
+  the vcif side + symmetric pre-declaration in
+  `framework_seed.sql`. Region #4 (S2G alone).
+
 ## Composition
 
 The shadows compose under **Theorem 14.5's preservation theorem**:
