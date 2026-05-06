@@ -125,3 +125,39 @@ Closes when agda2v4cat ≥ v0.x ships:
 3. Promissory annotation on each of the 10 Tier-3 shadows
    updated to reflect that the simpler permissive emission is
    the path forward.
+
+## Closure trail (2026-05-05 — fire #15)
+
+**Closed** by [agda2v4cat 7527c94](https://github.com/v4cat-oss/agda2v4cat/commit/7527c94)
+landing under [agda2v4cat#12](https://github.com/v4cat-oss/agda2v4cat/issues/12)
+within fire #15.
+
+What shipped:
+
+- `Vcif.hs` permissive emission: dropped the 6 singleton kind:/
+  vis: anchor nodes, the bulk type:/sort:/mod:/builtin: anchor
+  groups, and the per-def `name:` anchor. Substantive nodes
+  (modules, defs, ranges, argument positions, parameters,
+  indices, clauses, patterns) continue to be emitted because
+  they carry data not derivable from edges alone.
+- The aggregation passes (`typeStrings`, `sorts`, `modalities`,
+  `builtins`) and the unused `BuiltinRegistry` parameter are
+  removed; the function signature retains the parameter as
+  `_builtinReg` for API stability.
+- Existing edge emissions (`defines-name`, `has-kind`,
+  `has-type`, `has-sort`, `has-modality`,
+  `has-arg-visibility`, `bound-as-builtin`, `is-instance`)
+  unchanged. The receiver's geometric-currying layer
+  introduces missing endpoints via boundary closure.
+
+Tests: cabal test passes (slug bijection + alphabet); end-to-
+end smoke against the HelloWorld and DataStructures fixtures
+passes with 7 / 15 distinct edge-kinds respectively (above
+the ≥6 / ≥12 thresholds).
+
+Deferred to follow-on fires (per shadow §"Closure path",
+items 2–3): a v4cat-core-side end-to-end smoke that confirms
+all boundaries close; promissory annotation updates on each of
+the 10 agda2v4cat-Tier-3 shadows. The Tier-3 sub-fires are now
+unblocked — they should land *after* this one as the shadow
+prescribed.

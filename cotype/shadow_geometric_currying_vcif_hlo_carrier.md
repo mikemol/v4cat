@@ -121,3 +121,29 @@ Closes when vcif-hlo ≥ v0.x ships:
    `edge_closed` compiles to a single XLA op rather than three
    sequential ones (this is *aspirational* and is a follow-on
    sub-sub-fire).
+
+## Closure trail (2026-05-05 — fire #15)
+
+**Closed** by [vcif-hlo b54ef5e](https://github.com/v4cat-oss/vcif-hlo/commit/b54ef5e)
+landing under [vcif-hlo#4](https://github.com/v4cat-oss/vcif-hlo/issues/4)
+within fire #15.
+
+What shipped:
+
+- New module `geometric_currying.py` with role-closure tensors
+  + `edge_closed` (saturating mode) + `advance_mask` (gating
+  helper). `PADDING_ID = 0` constant for "unbound" rows.
+- `role_source_closed`, `role_kind_closed`, `role_target_closed`
+  per-role helpers that work over a `RowDataset` universe
+  (compatible with vcif-hlo's row-array shape from `tensors.py`).
+- `edge_closed = role_source_closed & role_kind_closed & role_target_closed`
+  (the trinity-AND that the shadow named).
+- `advance_mask(universe, scheduled_mask)` that gates path
+  advancement on edge-closure.
+- 7 tests in `test_geometric_currying_carrier.py` covering the
+  closed-on-saturated-edges invariant, padding-row rejection,
+  partial-arity universes, and `advance_mask`'s shape-validation.
+
+Total vcif-hlo test count: 65. Cross-substrate parity tests in
+`test_parity.py` continue to produce identical V₄ classifications
+across all three substrate pairings.

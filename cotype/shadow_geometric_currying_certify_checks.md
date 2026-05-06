@@ -103,3 +103,34 @@ Closes when v4cat-certify ≥ v0.x ships:
 5. Documentation: the certification README explains the new
    claims and how they connect to the geometric-currying
    substrate.
+
+## Closure trail (2026-05-05 — fire #15)
+
+**Closed** by [v4cat-certify 6a3e526](https://github.com/v4cat-oss/v4cat-certify/commit/6a3e526)
+landing under [v4cat-certify#1](https://github.com/v4cat-oss/v4cat-certify/issues/1)
+within fire #15.
+
+What shipped:
+
+- 4 new `WorkspaceClaim` entries in `claim.py`:
+  - `claim:geometric-currying-substrate-v4cat`
+  - `claim:geometric-currying-carrier-vcif`
+  - `claim:geometric-currying-carrier-vcif-rdf`
+  - `claim:geometric-currying-carrier-vcif-hlo`
+- 4 corresponding `check_geometric_currying_*` implementation
+  functions in `checks.py` that audit the post-fire-#15 state of
+  the workspace (event_cells.py, S13 schema tables, semantic.py
+  rule 15, carrier.ttl carrier slots, geometric_currying.py
+  helpers).
+- The pre-existing `check_carrier_vs_object_vcif_rdf` predicate-
+  count band widened from 10–14 to 15–20 to accommodate the
+  5 new geometric-currying carrier slots.
+- Test claim-count updated 8 → 12; all 12 implementation +
+  catalogue-witness assertions pass against the current
+  workspace.
+
+Deferred to a follow-on fire (per shadow §"Closure path",
+items 3–5): cross-substrate parity test extension that verifies
+the four new claims agree across vcif / vcif-rdf / vcif-hlo;
+closure-report template updates; documentation in the
+certification README.

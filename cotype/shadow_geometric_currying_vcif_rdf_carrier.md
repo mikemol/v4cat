@@ -160,3 +160,27 @@ Closes when vcif-rdf ≥ v0.x ships:
    saturated projections.
 5. Cross-substrate parity tests against vcif and vcif-hlo
    continue to produce identical V₄ cells.
+
+## Closure trail (2026-05-05 — fire #15)
+
+**Closed** by [vcif-rdf 4fd9777](https://github.com/v4cat-oss/vcif-rdf/commit/4fd9777)
+landing under [vcif-rdf#1](https://github.com/v4cat-oss/vcif-rdf/issues/1)
+within fire #15.
+
+What shipped:
+
+- `vc:EventCellAssertion` and `vc:RoleBinding` carrier classes in
+  `carrier.ttl`. Each is self-hosted as `vc:NodeAssertion`.
+- 5 carrier predicates: `vc:cellKind`, `vc:role`, `vc:occupant`,
+  `vc:roleOfCell`, `vc:closureState`.
+- 4 tests in `test_geometric_currying_carrier.py` verifying the
+  new classes load, the slots load, and the existing
+  `vc:CellAssertion` (kquery cell) is preserved.
+
+**Deferred to a follow-on sub-sub-fire** (per shadow §"Closure
+path", item 2): the rename of `vc:CellAssertion` →
+`vc:KqueryCellAssertion` with a deprecated alias. Per the
+migration shadow's mitigation note, this rename is decoupled
+from this sub-fire to keep the diff surgical; consumers that read
+`vc:CellAssertion` continue to work. Also deferred (item 3): the
+SHACL Layer-2 edge-projection-backed-by-cell closure rule.

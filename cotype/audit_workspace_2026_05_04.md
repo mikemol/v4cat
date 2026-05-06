@@ -55,7 +55,7 @@ Carrier-vs-object discipline:
 
 ## Trajectory
 
-Six fires across this trajectory, each with a recorded shadow:
+Fifteen fires across this trajectory, each with a recorded shadow:
 
 | # | Fire | Region | Shadow file | Issue |
 | --- | --- | --- | --- | --- |
@@ -73,6 +73,7 @@ Six fires across this trajectory, each with a recorded shadow:
 | 12 | geometric-currying semantic substrate (recognition + 7 migration promissories) | #8 DBE+RFS+S2G recognition-led | shadow_geometric_currying.md + 7 per-repo `shadow_geometric_currying_<repo>.md` + closure-trail update on shadow_event_log_gap.md | [v4cat#4][v4] |
 | 13 | epic-shape audit (split gc-v4cat-core into 5 sub-issues; surface 2 orphan promissories; add 2 discipline rules) | #4 (S2G alone) | shadow_workspace_project_tracking.md (extended with promissory-has-issue + epic-shape-recognition rules); Tracking annotations on shadow_event_log_gap.md + shadow_stablehlo_export_gap.md | [v4cat#11][v11] |
 | 14 | gc-v4cat-core lands (closes the v4cat#5 epic + the event-log gap; 5 sequential commits, +39 tests) | #6 (DBE+S2G) | closure-trail annotations on shadow_geometric_currying_v4cat_refactor.md + shadow_event_log_gap.md | [v4cat#12][v12] |
+| 15 | geometric-currying migration epic lands (closes methodology#10 epic + 6 sub-fires across 6 repos: gc-vcif-carrier, gc-vcif-rdf-carrier, gc-vcif-hlo-carrier, gc-octave-role-matrices, gc-certify-checks, gc-agda2v4cat-permissive) | #6 (DBE+S2G) | closure-trail annotations on the 6 promissory shadows | [v4cat#13][v13] |
 
 [m3]: https://github.com/v4cat-oss/methodology/issues/3
 [m4]: https://github.com/v4cat-oss/methodology/issues/4
@@ -87,6 +88,7 @@ Six fires across this trajectory, each with a recorded shadow:
 [v4]: https://github.com/v4cat-oss/v4cat/issues/4
 [v11]: https://github.com/v4cat-oss/v4cat/issues/11
 [v12]: https://github.com/v4cat-oss/v4cat/issues/12
+[v13]: https://github.com/v4cat-oss/v4cat/issues/13
 [h3]: https://github.com/v4cat-oss/vcif-hlo/issues/3
 
 Meta-S₃ rotation observed across the trajectory:

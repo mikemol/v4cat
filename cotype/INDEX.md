@@ -531,6 +531,35 @@ The remaining geometric-currying migration sub-fires
 `gc-octave-role-matrices`) now have an operational substrate to
 consume.
 
+## Geometric-currying migration epic landed (DBE+S2G fire, 2026-05-05)
+
+Fire #15 lands the cross-repo geometric-currying migration epic,
+closing [methodology#10](https://github.com/v4cat-oss/methodology/issues/10)
+along with its 6 sub-fires across 6 repos. The substrate
+(shipped at fire #14) is now consumed by every sibling carrier.
+
+- **Closed-fire trajectory entry**: see audit_workspace_2026_05_04.md
+  fire #15 row.
+- **Sub-fires + commits**:
+  - [vcif 0785ebb](https://github.com/v4cat-oss/vcif/commit/0785ebb) — `gc-vcif-carrier` (4 schema sections + rule 15)
+  - [vcif-rdf 4fd9777](https://github.com/v4cat-oss/vcif-rdf/commit/4fd9777) — `gc-vcif-rdf-carrier` (vc:EventCellAssertion + 5 carrier slots)
+  - [vcif-hlo b54ef5e](https://github.com/v4cat-oss/vcif-hlo/commit/b54ef5e) — `gc-vcif-hlo-carrier` (role-closure tensors + advance_mask)
+  - [v4cat-octave 8582d70](https://github.com/v4cat-oss/v4cat-octave/commit/8582d70) — `gc-octave-role-matrices` ([S, K, T] matrices + edge_closed)
+  - [v4cat-certify 6a3e526](https://github.com/v4cat-oss/v4cat-certify/commit/6a3e526) — `gc-certify-checks` (4 new audit claims; total 12)
+  - [agda2v4cat 7527c94](https://github.com/v4cat-oss/agda2v4cat/commit/7527c94) — `gc-agda2v4cat-permissive` (anchor ceremony stripped from Vcif.hs)
+- **Closure trails**: appended to all 6 promissory shadows
+  (`shadow_geometric_currying_vcif_carrier.md`,
+  `_vcif_rdf_carrier.md`, `_vcif_hlo_carrier.md`,
+  `_octave_role_matrices.md`, `_certify_checks.md`,
+  `_agda2v4cat_permissive.md`).
+- **Cross-substrate kernel-parity** (`v4cat-octave/tools/parity-check.sh`)
+  continues to pass — saturated-edge projection unchanged for
+  legacy consumers.
+
+The geometric-currying migration epic is now fully landed across
+the workspace. Follow-on sub-sub-fires (the deferred items in
+each shadow's closure trail) become candidates for future fires.
+
 ## Workspace project tracking (DBE+RFS+S2G fire, 2026-05-05)
 
 A new SoT split: GitHub Issues + the org-level Project become

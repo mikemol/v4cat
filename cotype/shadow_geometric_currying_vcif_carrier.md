@@ -99,3 +99,29 @@ Closes when vcif ≥ v0.x ships:
 Cross-substrate parity (against vcif-rdf and vcif-hlo, once
 *their* sub-fires land) continues to produce identical V₄
 classifications.
+
+## Closure trail (2026-05-05 — fire #15)
+
+**Closed** by [vcif 0785ebb](https://github.com/v4cat-oss/vcif/commit/0785ebb)
+landing under [vcif#1](https://github.com/v4cat-oss/vcif/issues/1) within
+fire #15.
+
+What shipped:
+
+- JSON Schema additions in `vcif-1.0.schema.json`: four optional
+  top-level sections — `geometric_cells`, `role_bindings`,
+  `boundaries`, `path_presentations` — plus their `$defs`.
+  Named `geometric_cells` (not `cells`) to avoid collision with
+  the existing kquery-cells `$def`.
+- `semantic.py` rule 15 (`_rule_15_edge_projection_backed_by_cell`):
+  no-op when `geometric_cells[]` is absent (legacy back-compat);
+  fires when present and an edge lacks a backing closed `EdgeCell`.
+- 5 tests in `test_geometric_currying_carrier.py` covering legacy
+  back-compat, well-formed acceptance, rule-15-fires-when-unbacked,
+  rule-15-silent-when-section-missing, and rule-15-fires-on-open-cell.
+
+Deferred to a follow-on fire (per shadow §"Why this is deferred"):
+profile-schema updates for the 5 non-snapshot profiles + importer
+back-compat that auto-derives `geometric_cells` from legacy
+`edges[]`. The substrate landed; the fully-symmetric round-trip
+machinery is the next fire's RFS.

@@ -144,3 +144,31 @@ Closes when v4cat-octave ≥ v0.x ships:
      produce identical V₄ cells.
 5. Documentation extension in `v4cat-octave/docs/spec.md`
    demonstrating role-matrix computations as worked examples.
+
+## Closure trail (2026-05-05 — fire #15)
+
+**Closed** by [v4cat-octave 8582d70](https://github.com/v4cat-oss/v4cat-octave/commit/8582d70)
+landing under [v4cat-octave#7](https://github.com/v4cat-oss/v4cat-octave/issues/7)
+within fire #15.
+
+What shipped:
+
+- `inst/+v4cat/role_matrices.m` — returns sparse `[S, K, T]`
+  matrices over a catalogue: `S(e,s) = 1` iff edge `e` has
+  source `s`; analogously `K`, `T`.
+- `inst/+v4cat/edge_closed.m` — saturating-mode closure,
+  `closed = full(any(S, 2) & any(K, 2) & any(T, 2))`.
+- `inst/+v4cat/edge_closed_strict.m` — strict closure rejecting
+  overloaded role-bindings, `sum(S, 2) == 1 & sum(K, 2) == 1 & sum(T, 2) == 1`.
+- `test/test_role_matrices.m` — 5 assertions validating shape,
+  saturation, and strict mode.
+
+Cross-substrate parity (`tools/parity-check.sh`) continues to
+produce identical V₄ classifications against the Python
+reference. The role-matrix layer composes with the existing
+catalogue without modifying the saturated-edge projection that
+legacy consumers see.
+
+Deferred to a follow-on fire (per shadow §"Closure path",
+item 5): the documentation extension in `docs/spec.md`
+demonstrating role-matrix computations as worked examples.
