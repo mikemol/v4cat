@@ -485,6 +485,21 @@ CREATE TABLE IF NOT EXISTS path_steps (
     FOREIGN KEY (cell_id) REFERENCES cells(id)
 );
 
+-- Event log: ordered append-only record of ISA writes. Closes the
+-- event-log gap registered in cotype/shadow_event_log_gap.md. Per
+-- theory.md § 15 (assertion-history group H = ℤ^𝔄), this gives
+-- 'replay' a canonical source: the event_log is the ordered
+-- traversal, and any vector presentation of the path is derived
+-- from it. record/replay/invert ISA verbs land on cat.events.
+CREATE TABLE IF NOT EXISTS event_log (
+    event_id          INTEGER PRIMARY KEY AUTOINCREMENT,
+    generator         TEXT NOT NULL,
+    args_json         TEXT NOT NULL,
+    input_state_hash  TEXT,
+    output_state_hash TEXT,
+    timestamp         TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
 -- =============================================================================
 -- END
 --

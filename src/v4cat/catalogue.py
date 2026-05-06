@@ -22,11 +22,136 @@ Design alignment with methodology.md:
 """
 from __future__ import annotations
 
+import hashlib
+import json
 import sqlite3
 from pathlib import Path
 from typing import Any, Iterable, Optional
 
 from . import event_cells
+
+
+class _EventsAPI:
+    """ISA proxy for the event log: ``cat.events.append / replay /
+    invert``.
+
+    Closes the event-log gap registered in
+    ``cotype/shadow_event_log_gap.md``. Per ``theory.md`` § 15
+    (assertion-history group ``H = ℤ^𝔄``), the event log is the
+    ordered traversal canonical source; any vector presentation
+    of the same path is a derived view.
+
+    Per the geometric-currying substrate (cotype/
+    shadow_geometric_currying.md § "Path identity has its missing
+    substrate"), path identity becomes well-typed:
+
+        record  := append a step (event row)
+        replay  := re-derive the event sequence from event_log
+        invert  := return the modal-inverse event (reverse traversal)
+
+    Auto-recording is automatic in ``introduce_node`` and ``edge``;
+    use ``cat.events.append`` directly for tests or for replay-
+    derived re-introductions.
+    """
+
+    def __init__(self, catalogue: 'SymmetryCatalogue'):
+        self._cat = catalogue
+
+    def append(
+        self,
+        generator: str,
+        args: dict,
+        *,
+        input_state_hash: Optional[str] = None,
+        output_state_hash: Optional[str] = None,
+    ) -> int:
+        """Append an event row. Returns the new event_id."""
+        cur = self._cat.conn.execute(
+            "INSERT INTO event_log "
+            "(generator, args_json, input_state_hash, output_state_hash) "
+            "VALUES (?, ?, ?, ?)",
+            (generator, json.dumps(args, sort_keys=True),
+             input_state_hash, output_state_hash),
+        )
+        return int(cur.lastrowid)
+
+    def replay(
+        self,
+        *,
+        start: int = 0,
+        end: Optional[int] = None,
+    ) -> list[dict]:
+        """Re-derive the event sequence over [start, end). Returns a
+        list of dicts, one per row, ordered by event_id."""
+        if end is None:
+            cur = self._cat.conn.execute(
+                "SELECT event_id, generator, args_json, "
+                "input_state_hash, output_state_hash, timestamp "
+                "FROM event_log WHERE event_id >= ? "
+                "ORDER BY event_id",
+                (start,),
+            )
+        else:
+            cur = self._cat.conn.execute(
+                "SELECT event_id, generator, args_json, "
+                "input_state_hash, output_state_hash, timestamp "
+                "FROM event_log "
+                "WHERE event_id >= ? AND event_id < ? "
+                "ORDER BY event_id",
+                (start, end),
+            )
+        return [
+            {
+                'event_id':          row[0],
+                'generator':         row[1],
+                'args':              json.loads(row[2]),
+                'input_state_hash':  row[3],
+                'output_state_hash': row[4],
+                'timestamp':         row[5],
+            }
+            for row in cur.fetchall()
+        ]
+
+    def invert(self, event_id: int) -> dict:
+        """Return the modal-inverse of the named event. v0.x semantics:
+        if the original event was an additive write (introduce_node /
+        edge), the inverse describes the removal that would undo it.
+        v4cat's RISC ISA is additive (no delete verbs); ``invert``
+        therefore returns a *symbolic* inverse — a dict suitable for
+        replay-style undo, not an immediate mutation.
+        """
+        cur = self._cat.conn.execute(
+            "SELECT event_id, generator, args_json FROM event_log "
+            "WHERE event_id = ?",
+            (event_id,),
+        )
+        row = cur.fetchone()
+        if row is None:
+            raise ValueError(f"unknown event_id {event_id!r}")
+        return {
+            'event_id':         int(row[0]),
+            'generator':        row[1],
+            'args':             json.loads(row[2]),
+            'inverse_intent':   'undo',
+            'note': (
+                'v4cat RISC ISA is additive; invert returns a '
+                'symbolic inverse. Domain-specific reverse-write '
+                'logic lives outside this kernel.'
+            ),
+        }
+
+
+def _state_hash(conn: sqlite3.Connection) -> str:
+    """Compute a sequence-number-driven state hash. Cheap; the
+    audit-trail-grade hash (Merkle over π(h)) is a follow-on.
+    """
+    rows = conn.execute(
+        "SELECT MAX(event_id), COUNT(*) FROM event_log"
+    ).fetchone()
+    digest = hashlib.sha1(
+        f"{rows[0]}|{rows[1]}".encode("utf-8")
+    ).hexdigest()
+    return digest[:16]
 
 
 HERE = Path(__file__).parent
@@ -74,6 +199,7 @@ class SymmetryCatalogue:
         self.conn = sqlite3.connect(str(db_path))
         self.conn.row_factory = sqlite3.Row
         self.conn.execute("PRAGMA foreign_keys = ON")
+        self.events = _EventsAPI(self)
         if bootstrap:
             self._maybe_bootstrap(schema_path)
             if check_self_hosting:
@@ -481,6 +607,18 @@ class SymmetryCatalogue:
         event_cells.close_boundary(self.conn, cell_id)
         event_cells.close_cell(self.conn, cell_id)
 
+        # Event log: record the introduce_node call. The event_log
+        # table is part of S13 (added at fire #14); guard for older
+        # databases that pre-date the schema.
+        try:
+            self.events.append(
+                'introduce_node',
+                {'id': id, 'name': name, 'type': type, 'attrs': attrs},
+                output_state_hash=_state_hash(self.conn),
+            )
+        except sqlite3.OperationalError:
+            pass  # event_log table not present in this catalogue
+
     def edge(
         self,
         src: str,
@@ -543,6 +681,16 @@ class SymmetryCatalogue:
         event_cells.bind_role(self.conn, cell_id, "target", tgt)
         event_cells.close_boundary(self.conn, cell_id)
         event_cells.close_cell(self.conn, cell_id)
+
+        # Event log: record the edge call (closes the event-log gap).
+        try:
+            self.events.append(
+                'edge',
+                {'src': src, 'tgt': tgt, 'kind': kind, 'notes': notes},
+                output_state_hash=_state_hash(self.conn),
+            )
+        except sqlite3.OperationalError:
+            pass
 
     def evaluate_tension(
         self,
