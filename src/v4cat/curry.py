@@ -102,12 +102,60 @@ class LiteralReferent:
 # =====================================================================
 
 @dataclass(frozen=True)
-class CellReferent:
+class KqueryCellReferent:
     """Project a cell of a sub-kquery. The composition operator that
     makes the algebra fixpoint-closed: a kquery's output cell becomes
-    a referent input to another kquery."""
+    a referent input to another kquery.
+
+    Renamed from ``CellReferent`` at fire #14 to disambiguate from
+    geometric-currying event-cells (see ``shadow_geometric_currying.md``
+    § "Disambiguation: cell"). The legacy name remains as a deprecated
+    alias for v0.x backward compatibility.
+    """
     sub:  'KqueryNode'
     cell: Literal['00', '01', '10', '11']
+
+
+#: Deprecated alias for :class:`KqueryCellReferent`. Kept for v0.x
+#: backward compatibility; remove in v1.0.
+CellReferent = KqueryCellReferent
+
+
+# =====================================================================
+# Geometric-currying referents (added at fire #14)
+# =====================================================================
+
+@dataclass(frozen=True)
+class EventCellReferent:
+    """Identities at one position of a closed event-cell, given the
+    other two boundary positions. The geometric-currying analogue
+    of :class:`EdgeReferent`.
+
+    Resolves to the set of occupant IDs in role-bindings of closed
+    EdgeCells whose ``pivot_role`` is occupied by ``pivot_id``,
+    returning the occupants of ``return_role``.
+    """
+    pivot_role:  Literal['source', 'kind', 'target']
+    pivot_id:    Union[str, 'Param']
+    return_role: Literal['source', 'kind', 'target']
+
+
+@dataclass(frozen=True)
+class RoleHornReferent:
+    """A partial boundary: a cell with two of three roles closed.
+    Resolves to the role-tokens (source / kind / target) that are
+    NOT bound on the named cell — the open horn awaiting closure.
+    """
+    cell_id:   Union[str, 'Param']
+
+
+@dataclass(frozen=True)
+class BoundaryClosureReferent:
+    """The set of EdgeCells whose closure-state matches the named
+    state (``open``, ``boundary-closed``, or ``closed``). Used by
+    closure-recognizer tensions to diagnose unclosed boundaries.
+    """
+    closure_state: Literal['open', 'boundary-closed', 'closed']
 
 
 # =====================================================================
@@ -116,7 +164,9 @@ class CellReferent:
 
 Referent = Union[
     EdgeReferent, AxisCutReferent, LiteralReferent,
-    CellReferent, Param,
+    KqueryCellReferent,
+    EventCellReferent, RoleHornReferent, BoundaryClosureReferent,
+    Param,
 ]
 
 
@@ -226,12 +276,84 @@ def resolve(
         return _resolve_axis_cut(referent, cat, bindings)
     if isinstance(referent, LiteralReferent):
         return list(referent.ids)
-    if isinstance(referent, CellReferent):
+    if isinstance(referent, KqueryCellReferent):
         sub_result = evaluate_node(referent.sub, cat, bindings)
         return list(sub_result[referent.cell])
+    if isinstance(referent, EventCellReferent):
+        return _resolve_event_cell(referent, cat, bindings)
+    if isinstance(referent, RoleHornReferent):
+        return _resolve_role_horn(referent, cat, bindings)
+    if isinstance(referent, BoundaryClosureReferent):
+        return _resolve_boundary_closure(referent, cat, bindings)
     raise TypeError(
         f"unknown Referent type: {type(referent).__name__!r}"
     )
+
+
+def _resolve_event_cell(
+    referent: 'EventCellReferent',
+    cat: 'SymmetryCatalogue',
+    bindings: dict[str, Any],
+) -> list[str]:
+    """Resolve an EventCellReferent: occupants of the return_role on
+    closed EdgeCells whose pivot_role is occupied by pivot_id."""
+    pivot_id = referent.pivot_id
+    if isinstance(pivot_id, Param):
+        pivot_id = bindings[pivot_id.name]
+    rows = cat.conn.execute(
+        "SELECT DISTINCT rb_ret.occupant_id "
+        "FROM role_bindings rb_pivot "
+        "JOIN role_bindings rb_ret ON rb_ret.cell_id = rb_pivot.cell_id "
+        "JOIN cells c ON c.id = rb_pivot.cell_id "
+        "WHERE c.cell_kind = 'EdgeCell' "
+        "  AND c.closure_state = 'closed' "
+        "  AND rb_pivot.role = ? AND rb_pivot.occupant_id = ? "
+        "  AND rb_ret.role = ?",
+        (referent.pivot_role, str(pivot_id), referent.return_role),
+    ).fetchall()
+    return [
+        (r[0] if not hasattr(r, 'keys') else r['occupant_id'])
+        for r in rows
+    ]
+
+
+def _resolve_role_horn(
+    referent: 'RoleHornReferent',
+    cat: 'SymmetryCatalogue',
+    bindings: dict[str, Any],
+) -> list[str]:
+    """Resolve a RoleHornReferent: the role-tokens (source / kind /
+    target) NOT yet bound on the named cell — the open horn."""
+    cell_id = referent.cell_id
+    if isinstance(cell_id, Param):
+        cell_id = bindings[cell_id.name]
+    bound = {
+        (r[0] if not hasattr(r, 'keys') else r['role'])
+        for r in cat.conn.execute(
+            "SELECT role FROM role_bindings WHERE cell_id = ?",
+            (str(cell_id),),
+        )
+    }
+    required = {'source', 'kind', 'target'}
+    return sorted(required - bound)
+
+
+def _resolve_boundary_closure(
+    referent: 'BoundaryClosureReferent',
+    cat: 'SymmetryCatalogue',
+    bindings: dict[str, Any],
+) -> list[str]:
+    """Resolve a BoundaryClosureReferent: EdgeCells in the named
+    closure-state."""
+    rows = cat.conn.execute(
+        "SELECT id FROM cells "
+        "WHERE cell_kind = 'EdgeCell' AND closure_state = ?",
+        (referent.closure_state,),
+    ).fetchall()
+    return [
+        (r[0] if not hasattr(r, 'keys') else r['id'])
+        for r in rows
+    ]
 
 
 def _resolve_edge(
