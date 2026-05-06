@@ -169,3 +169,34 @@ ISA-verb names for the three operations.
 
 The gap remains promissory until the migration lands; this
 update names the substrate the gap was structurally missing.
+
+## Closure trail (2026-05-05 — fire #14)
+
+**Closed** by [v4cat#10 gc-v4cat-path-isa-verbs](https://github.com/v4cat-oss/v4cat/issues/10) +
+[methodology#11](https://github.com/v4cat-oss/methodology/issues/11)
+(tracker), shipped within the gc-v4cat-core epic
+([v4cat#5](https://github.com/v4cat-oss/v4cat/issues/5)).
+
+What landed:
+
+- New `event_log` table in `schema.sql` (S13 section):
+  `event_id`, `generator`, `args_json`, `input_state_hash`,
+  `output_state_hash`, `timestamp`.
+- `cat.events` ISA proxy on `SymmetryCatalogue` exposing the three
+  operations the gap shadow named:
+  - `cat.events.append(generator, args, ...) → event_id`
+  - `cat.events.replay(start=0, end=None) → list[dict]`
+  - `cat.events.invert(event_id) → dict` (symbolic inverse;
+    v4cat's RISC ISA is additive, no delete verbs)
+- Auto-recording: `introduce_node` and `edge` write to
+  `event_log` after their writes complete.
+- 9 tests in `src/v4cat/tests/test_path_isa.py` covering
+  auto-recording, replay ordering + idempotency + range,
+  symbolic invert, and a path-identity round-trip showing two
+  catalogues built from the same event sequence end up with the
+  same closed cells.
+
+Per the catalogue-thickens-forward discipline, the gap shadow
+remains in cotype as the historical record: the gap *was*
+catalogued at fire #5, *substrated* at fire #12, and *closed* at
+fire #14. The trail is visible.

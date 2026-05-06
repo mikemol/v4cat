@@ -192,3 +192,27 @@ Closes when v4cat ≥ v0.x ships:
 Verification: kernel-parity tests (against
 [v4cat-octave](https://github.com/v4cat-oss/v4cat-octave) once
 *its* sub-fire lands) continue to produce identical V₄ cells.
+
+## Closure trail (2026-05-05 — fire #14)
+
+**Closed** by gc-v4cat-core landing in five sequential commits
+within fire #14:
+
+| Commit | Sub-issue | What shipped |
+| --- | --- | --- |
+| Stage A | [v4cat#6](https://github.com/v4cat-oss/v4cat/issues/6) | `event_cells.py` (5 RISC primitives) + schema additions (`cells`, `role_bindings`, `path_steps`) + `introduce_node` / `edge` redirects |
+| Stage B | [v4cat#7](https://github.com/v4cat-oss/v4cat/issues/7) | 11 new node-kinds + 17 new edge-kinds in `framework_seed.sql` (HF-GeometricCurrying); `Q-geometric-currying-vocabulary` umbrella break in `theory.py` IMPL set |
+| Stage C | [v4cat#8](https://github.com/v4cat-oss/v4cat/issues/8) | 4 T-* diagnostic tensions catalogued as bootstrap recognizers |
+| Stage D | [v4cat#9](https://github.com/v4cat-oss/v4cat/issues/9) | `CellReferent` → `KqueryCellReferent` rename + 3 new event-cell referents (`EventCellReferent`, `RoleHornReferent`, `BoundaryClosureReferent`) + evaluator extensions |
+| Stage E | [v4cat#10](https://github.com/v4cat-oss/v4cat/issues/10) | `cat.events.append/replay/invert` ISA verbs + `event_log` table + auto-recording — **closes the event-log gap** ([shadow](shadow_event_log_gap.md)) |
+
+Test coverage: 39 new tests across 5 new test files. Total v4cat
+test count: 156 → 195. Cross-substrate kernel-parity
+(`v4cat-octave/tools/parity-check.sh`) continues to pass —
+saturated-edge projection unchanged for legacy consumers.
+
+The named module is `event_cells.py` (not `cells.py`) because
+`v4cat.cells` already exists for the 8-way kind-stratification
+enum (Definition 14.1). The disambiguation is recorded in the
+new module's docstring + `shadow_geometric_currying.md` §
+"Disambiguation: cell".

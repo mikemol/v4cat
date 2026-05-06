@@ -502,6 +502,35 @@ path-identity primitive the gap was missing is supplied by
 closure-before-traversal. The gap remains promissory until the
 per-repo migration lands.
 
+## Geometric-currying core landed (DBE+S2G fire, 2026-05-05)
+
+Fire #14 lands the geometric-currying core layer in v4cat,
+closing the v4cat#5 epic + its 5 sub-issues + the long-standing
+event-log gap (open since fire #5, substrated at fire #12).
+
+- **Closed-fire trajectory entry**: see audit_workspace_2026_05_04.md
+  fire #14 row.
+- **Implementation**: `event_cells.py`, S13 schema additions
+  (`cells`, `role_bindings`, `path_steps`, `event_log` tables),
+  HF-GeometricCurrying vocabulary in `framework_seed.sql` (11
+  node-kinds and 17 edge-kinds), 4 T-* diagnostic tensions,
+  curry.py rename (`CellReferent` → `KqueryCellReferent`), 3 new
+  event-cell referents, plus the `cat.events.append/replay/invert`
+  ISA verbs.
+- **Test impact**: +39 tests (5 new test files); v4cat suite
+  156 → 195. Cross-substrate kernel-parity (against
+  v4cat-octave) preserved.
+- **Closure trails**: appended to
+  [shadow_geometric_currying_v4cat_refactor.md](shadow_geometric_currying_v4cat_refactor.md)
+  (per-stage commit table) + [shadow_event_log_gap.md](shadow_event_log_gap.md)
+  (gap closed; closure-trail with the new ISA verbs catalogued).
+
+The remaining geometric-currying migration sub-fires
+(`gc-vcif-carrier`, `gc-vcif-rdf-carrier`, `gc-vcif-hlo-carrier`,
+`gc-agda2v4cat-permissive`, `gc-certify-checks`,
+`gc-octave-role-matrices`) now have an operational substrate to
+consume.
+
 ## Workspace project tracking (DBE+RFS+S2G fire, 2026-05-05)
 
 A new SoT split: GitHub Issues + the org-level Project become

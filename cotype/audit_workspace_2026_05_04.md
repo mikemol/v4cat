@@ -72,6 +72,7 @@ Six fires across this trajectory, each with a recorded shadow:
 | 11 | v4cat-octave v0.1 (reference carrier — Octave) | #8 DBE+RFS+S2G | shadow_v4cat_octave_distribution.md + 5 per-future-fire `shadow_v4cat_octave_<topic>.md` | [methodology#9][m9] |
 | 12 | geometric-currying semantic substrate (recognition + 7 migration promissories) | #8 DBE+RFS+S2G recognition-led | shadow_geometric_currying.md + 7 per-repo `shadow_geometric_currying_<repo>.md` + closure-trail update on shadow_event_log_gap.md | [v4cat#4][v4] |
 | 13 | epic-shape audit (split gc-v4cat-core into 5 sub-issues; surface 2 orphan promissories; add 2 discipline rules) | #4 (S2G alone) | shadow_workspace_project_tracking.md (extended with promissory-has-issue + epic-shape-recognition rules); Tracking annotations on shadow_event_log_gap.md + shadow_stablehlo_export_gap.md | [v4cat#11][v11] |
+| 14 | gc-v4cat-core lands (closes the v4cat#5 epic + the event-log gap; 5 sequential commits, +39 tests) | #6 (DBE+S2G) | closure-trail annotations on shadow_geometric_currying_v4cat_refactor.md + shadow_event_log_gap.md | (back-pointer added after seeding) |
 
 [m3]: https://github.com/v4cat-oss/methodology/issues/3
 [m4]: https://github.com/v4cat-oss/methodology/issues/4
