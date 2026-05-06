@@ -519,3 +519,52 @@ INSERT OR IGNORE INTO witnesses (spec_id, break_number, kind, notes, scope) VALU
     ('framework', 'Q-geometric-currying-vocabulary', 'catalogue-introduces',
      'HF-GeometricCurrying: 11 node-kinds + 17 edge-kinds for the geometric-currying substrate.',
      'spec');
+
+-- =============================================================================
+-- S13.1 — HF-GeometricCurrying closure recognizers (T-* tensions)
+--
+-- Per cotype/shadow_geometric_currying.md § "New closure covers": four
+-- recognizer-tensions detect substrate-violation conditions. Each is a
+-- curry-spec AST whose diagnostic cell flags the violation.
+--
+-- The shape_json field documents the intended KqueryNode AST structure.
+-- Auto-evaluation through evaluate_tension is gated on the curry-spec
+-- JSON deserialiser landing as a follow-on; for v0.x these tensions
+-- ship as catalogued bootstrap data and are evaluated by domain-specific
+-- code that constructs the equivalent KqueryNode AST in Python.
+-- =============================================================================
+
+INSERT OR IGNORE INTO tensions (
+    id, name, description, status, addressing_stage,
+    disposition, parameters_json, shape_json
+) VALUES
+    ('T-edge-boundary-closure',
+     'Edge boundary closure',
+     'Detect EdgeCells whose boundary is not closed (open boundary -- closure obligation undischarged).',
+     'open', NULL, 'diagnostic', '[]',
+     '{"type":"kquery","a":{"type":"BoundaryClosureReferent","closure_state":"open"},"b":{"type":"BoundaryClosureReferent","closure_state":"open"},"universe":{"type":"BoundaryClosureReferent","closure_state":"open"},"diagnostic_cell":"01","interpretation":"c01 lists EdgeCells whose boundary is open."}'),
+
+    ('T-edge-projection-backed-by-cell',
+     'Edge projection backed by cell',
+     'Detect saturated edge-projections (witnesses / lineages rows) without a corresponding closed EdgeCell.',
+     'open', NULL, 'diagnostic', '[]',
+     '{"type":"kquery","a":{"type":"Param","name":"saturated_edges"},"b":{"type":"BoundaryClosureReferent","closure_state":"closed"},"universe":{"type":"Param","name":"saturated_edges"},"diagnostic_cell":"10","interpretation":"c10 lists saturated edges without a backing closed EdgeCell."}'),
+
+    ('T-path-advance-only-through-closed-cells',
+     'Path advance only through closed cells',
+     'Detect path-steps that advance through unclosed cells (boundary-closure-before-traversal violation).',
+     'open', NULL, 'diagnostic', '[]',
+     '{"type":"kquery","a":{"type":"Param","name":"path_step_cells"},"b":{"type":"BoundaryClosureReferent","closure_state":"closed"},"universe":{"type":"Param","name":"path_step_cells"},"diagnostic_cell":"10","interpretation":"c10 lists path-step cells that are not closed."}'),
+
+    ('T-path-presentation-closure',
+     'Path presentation closure',
+     'Detect PathPresentations whose underlying Path lacks any closed cell anchor.',
+     'open', NULL, 'diagnostic', '[]',
+     '{"type":"kquery","a":{"type":"Param","name":"all_presentations"},"b":{"type":"Param","name":"presentations_with_closed_anchor"},"universe":{"type":"Param","name":"all_presentations"},"diagnostic_cell":"10","interpretation":"c10 lists presentations with no closed-cell anchor."}');
+
+-- Link the four tensions to the umbrella break for traceability.
+INSERT OR IGNORE INTO tension_breaks (tension_id, break_number) VALUES
+    ('T-edge-boundary-closure',                  'Q-geometric-currying-vocabulary'),
+    ('T-edge-projection-backed-by-cell',         'Q-geometric-currying-vocabulary'),
+    ('T-path-advance-only-through-closed-cells', 'Q-geometric-currying-vocabulary'),
+    ('T-path-presentation-closure',              'Q-geometric-currying-vocabulary');
